@@ -153,7 +153,7 @@ function() {
       var promise = this.blob.readBuffered(0, 24).then(function(bytes) {
         return new GDVHeaderSpec(bytes.buffer, bytes.byteOffset, bytes.byteLength);
       });
-      Object.defineProperty(this, 'retrievedInfo', {value:promise, enumerable:true});
+      Object.defineProperty(this, 'retrievedHeader', {value:promise, enumerable:true});
       return promise;
     },
     get retrievedPalette() {
