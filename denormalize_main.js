@@ -7,6 +7,105 @@ function() {
 
   'use strict';
   
+  var ac = new AudioContext();
+  
+  Blob.prototype.getBuffered = function(sliceFrom, sliceTo) {
+    var buf = this.buffer;
+    if (buf && sliceFrom >= buf.bufferOffset && sliceTo <= (buf.bufferOffset + buf.byteLength)) {
+      return Promise.resolve(new Uint8Array(buf, sliceFrom - buf.bufferOffset, sliceTo - sliceFrom));
+    }
+    var bufferStart = Math.floor(sliceFrom / (64 * 1024));
+    var bufferEnd = Math.min(this.size, Math.ceil(sliceTo / (64 * 1024)));
+    var self = this;
+    return new Promise(function(resolve, reject) {
+      var fr = new FileReader;
+      fr.onload = function() {
+        var buf = this.result;
+        buf.bufferOffset = bufferStart;
+        self.buffer = buf;
+        resolve(new Uint8Array(buf, sliceFrom - bufferStart, sliceTo - sliceFrom));
+      };
+      fr.onerror = function() {
+        reject(this.error);
+      };
+      fr.readAsArrayBuffer(self.slice(bufferStart, bufferEnd));
+    });
+  };
+  
+  function GDVHeaderSpec(buffer, byteOffset, byteLength) {
+    this.dv = new DataView(buffer, byteOffset, byteLength);
+  }
+  GDVHeaderSpec.prototype = {
+    get signature() {
+      return this.dv.getUint32(0, true);
+    },
+    get hasValidSignature() {
+      return (this.signature === 0x29111994);
+    },
+    // ignore: 2 bytes
+    get frameCount() {
+      return this.dv.getUint16(6, true);
+    },
+    get framesPerSecond() {
+      return this.dv.getUint16(8, true);
+    },
+    get audioFlags() {
+      return this.dv.getUint16(10, true);
+    },
+    get audioIsDPCM() {
+      return !!(this.audioFlags & 8);
+    },
+    get audioBytesPerSample() {
+      return (this.audioFlags & 4) ? 2 : 1;
+    },
+    get audioChannels() {
+      return (this.audioFlags & 2) ? 2 : 1;
+    },
+    get audioIsPresent() {
+      return !!(this.audioFlags & 1);
+    },
+    get audioSampleRate() {
+      return this.dv.getUint16(12, true);
+    },
+    get videoFlags() {
+      return this.dv.getUint16(14, true);
+    },
+    get bitsPerPixel() {
+      switch (this.videoFlags & 7) {
+        case 1: return 8;
+        case 2: return 15;
+        case 3: return 16;
+        case 4: return 24;
+       }
+    },
+    get maxFrameSize() {
+      return this.dv.geUint16(16, true);
+    },
+    get videoIsPresent() {
+      return (this.maxFrameSize !== 0);
+    },
+    // ignore: 2 bytes
+    get videoWidth() {
+      return this.dv.getUint16(20, true);
+    },
+    get videoHeight() {
+      return this.dv.getUint16(22, true);
+    },
+  };
+  
+  function GDV(blob) {
+    this.blob = blob;
+  }
+  GDV.prototype = {
+    get retrievedHeader() {
+      var promise = this.blob.readBuffered(0, 24).then(function(bytes) {
+        return new GDVInfoSpec(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+      });
+      Object.defineProperty(this, 'retrievedInfo', {value:promise, enumerable:true});
+      return promise;
+    },
+  };
+  
   console.log('hello... newman world');
   
   var dragdrop = document.getElementById('dragdrop');
@@ -36,7 +135,11 @@ function() {
   function onfile(file) {
     var section = createSection();
     if (/\.gdv$/i.test(file.name)) {
-      section.innerText = 'video!';
+      var gdv = new GDV(file);
+      gdv.retrievedHeader.then(function(header) {
+        console.log(header);
+        section.innerText = header.videoWidth + 'x' + header.videoHeight;
+      });
     }
     else {
       section.innerText = 'unknown: ' + file.name;
