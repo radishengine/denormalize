@@ -1,7 +1,23 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <script type='text/javascript' src='require.js' data-main='denormalize_main.js'></script>
+  <style type='text/css'>
+    html, body {
+      font-family: sans-serif;
+    }
+    #dragdrop {
+      border: 3px silver dashed;
+      text-align: center;
+      padding: 1em;
+    }
+    #dragdrop.dropping {
+      border-color: black;
+      background: silver;
+    }
+  </style>
 </head>
 <body>
+  <div id='dragdrop'>Drag &amp; Drop Here</div>
 </body>
 </html>
