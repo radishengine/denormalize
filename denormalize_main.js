@@ -101,6 +101,7 @@ function() {
       size *= this.audioChannels;
       size *= this.audioBytesPerSample;
       if (this.audioIsDPCM) size /= 2;
+      Object.defineProperty(this, 'audioChunkSize', {value:size, enumerable:true});
       return size;
     },
     get durationString() {
@@ -170,14 +171,7 @@ function() {
     var inside = document.createElement('DIV');
     inside.classList.add('content');
     div.appendChild(inside);
-    div.appendChild(div.buttons = document.createElement('DIV'));
-    inside.button = function(text, onclick) {
-      var button = document.createElement('BUTTON');
-      button.innerText = text;
-      button.onclick = onclick;
-      div.buttons.appendChild(button);
-      return button;
-    };
+    div.appendChild(inside.buttons = document.createElement('DIV'));
     inside.titleElement = div.titleElement;
     return inside;
   }
@@ -197,9 +191,111 @@ function() {
           section.ctx2d.fillStyle = 'black';
           section.ctx2d.fillRect(0, 0, section.display.width, section.display.height);
         }
-        section.button('Play', function() {
-          console.log('hi');
+        section.addEventListener('play', function() {
+          var destination = ac.createGain();
+          destination.connect(ac.destination);
+          section.dispatchEvent(new CustomEvent('playing'));
+          var frameCount = header.frameCount;
+          const baseTime = ac.currentTime;
+          var nextFrameTime = baseTime;
+          var reqId = null;
+          function stop() {
+            if (reqId !== null) {
+              cancelAnimationFrame(reqId);
+              reqId = null;
+            }
+            destination.disconnect();
+            section.removeEventListener('stop', stop);
+            section.dispatchEvent(new CustomEvent('stopped'));
+          }
+          section.addEventListener('stop', stop);
+          var readOffset = header.frameDataOffset;
+          function onAnimationFrame() {
+            reqId = null;
+            if (frameCount < 1) {
+              section.display.dispatchEvent(new CustomEvent('stop'));
+              return;
+            }
+            if (ac.currentTime < nextFrameTime) {
+              return;
+            }
+            var thisFrameTime = nextFrameTime;
+            nextFrameTime += 1/header.framesPerSecond;
+            frameCount--;
+            if (header.audioIsPresent) {
+              file.readBuffered(readOffset, readOffset + header.audioChunkSize)
+              .then(function(audioChunk) {
+                var sample = ac.createBufferSource();
+                sample.connect(destination);
+                var sampleCount = Math.floor(header.sampleRate / header.framesPerSecond);
+                sample.buffer = ac.createBuffer(2, sampleCount, header.sampleRate);
+                const c = header.audioChannels;
+                var f32 = new Array(c);
+                for (var i = 0; i < c; i++) {
+                  f32[i] = sample.buffer.getChannelData(i);
+                }
+                switch (header.audioBytesPerSample) {
+                  case 1:
+                    for (var i = 0; i < sampleCount; i++) {
+                      f32[i%c][(i/c)|0] = audioChunk[i];
+                    }
+                    break;
+                  default:
+                    throw new Error('unsupported');
+                }
+                sample.play(thisFrameTime);
+              });
+              readOffset += header.audioChunkSize;
+            }
+            if (header.videoIsPresent) {
+              file.readBuffered(readOffset, readOffset + 4 + header.maxFrameSize)
+              .then(function(frameData) {
+                var dv = new DataView(frameData.buffer, frameData.byteOffset, 8);
+                if (dv.getUint16(0, true) !== 0x1305) {
+                  throw new Error('video frame header not found');
+                }
+                var dataSize = dv.getUint16(2, true);
+                var frameFlags = dv.getUint32(4, true);
+                readOffset += 8 + dataSize;
+                reqId = requestAnimationFrame(onAnimationFrame);
+                frameData = frameData.subarray(8, 8 + dataSize);
+                var encoding = frameFlags & 15;
+                var offset = (frameFlags >>> 8);
+                var halfResMode = !!(frameFlags & 32);
+                var quarterResMode = !!(frameFlags & 16);
+                var show = !!(frameFlags & 128);
+              });
+            }
+            else {
+              reqId = requestAnimationFrame(onAnimationFrame);
+            }
+          }
+          reqId = requestAnimationFrame(onAnimationFrame);
         });
+        section.buttons.appendChild(section.playButton = document.createElement('BUTTON'));
+        section.playButton.innerText = 'Play';
+        section.playButton.onclick = function() {
+          section.dispatchEvent(new CustomEvent('play'));
+        };
+        section.addEventListener('playing', function() {
+          section.playButton.disabled = true;
+        });
+        section.addEventListener('stopped', function() {
+          section.playButton.disabled = false;
+        });
+        
+        section.buttons.appendChild(section.stopButton = document.createElement('BUTTON'));
+        section.stopButton.innerText = 'Stop';
+        section.stopButton.onclick = function() {
+          section.dispatchEvent(new CustomEvent('stop'));
+        };
+        section.addEventListener('playing', function() {
+          section.stopButton.disabled = false;
+        });
+        section.addEventListener('stopped', function() {
+          section.stopButton.disabled = true;
+        });
+        section.stopButton.disabled = true;
       });
     }
     else {
