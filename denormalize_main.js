@@ -146,8 +146,8 @@ function() {
           section.display.height = header.videoHeight;
           section.ctx2d = section.display.getContext('2d');
           section.pixelBuffer = section.ctx2d.createImageData(section.display.width, section.display.height);
-          section.fillStyle = 'black';
-          section.drawRect(0, 0, section.display.width, section.display.height);
+          section.ctx2d.fillStyle = 'black';
+          section.ctx2d.fillRect(0, 0, section.display.width, section.display.height);
         }
         section.innerText = header.videoWidth + 'x' + header.videoHeight;
       });
