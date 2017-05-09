@@ -147,7 +147,7 @@ function() {
           section.ctx2d = section.display.getContext('2d');
           section.pixelBuffer = section.ctx2d.createImageData(section.display.width, section.display.height);
           section.fillStyle = 'black';
-          section.fillRect(0, 0, section.display.width, section.display.height);
+          section.drawRect(0, 0, section.display.width, section.display.height);
         }
         section.innerText = header.videoWidth + 'x' + header.videoHeight;
       });
