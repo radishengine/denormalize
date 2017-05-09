@@ -81,7 +81,7 @@ function() {
        }
     },
     get maxFrameSize() {
-      return this.dv.geUint16(16, true);
+      return this.dv.getUint16(16, true);
     },
     get videoIsPresent() {
       return (this.maxFrameSize !== 0);
