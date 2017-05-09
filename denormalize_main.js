@@ -159,8 +159,8 @@ function() {
     div.closeButton.onclick = function() {
       div.parentNode.removeChild(div);
     };
-    div.appendChild(div.title = document.createElement('H3'));
-    div.title.innerText = title || '';
+    div.appendChild(div.titleElement = document.createElement('H3'));
+    div.titleElement.innerText = title || '';
     if (dragdrop.nextSibling) {
       dragdrop.parentNode.insertBefore(div, dragdrop.nextSibling);
     }
@@ -186,7 +186,7 @@ function() {
     if (/\.gdv$/i.test(file.name)) {
       var gdv = new GDV(file);
       gdv.retrievedHeader.then(function(header) {
-        section.title.innerText += ' (' + header.durationString + ')';
+        section.titleElement.innerText += ' (' + header.durationString + ')';
         if (header.videoIsPresent) {
           section.appendChild(section.display = document.createElement('CANVAS'));
           section.display.width = header.videoWidth;
