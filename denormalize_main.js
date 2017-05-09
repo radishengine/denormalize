@@ -178,6 +178,7 @@ function() {
       div.buttons.appendChild(button);
       return button;
     };
+    inside.titleElement = div.titleElement;
     return inside;
   }
   
