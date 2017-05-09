@@ -237,7 +237,7 @@ function() {
                 switch (header.audioBytesPerSample) {
                   case 1:
                     for (var i = 0; i < sampleCount; i++) {
-                      f32[i%c][(i/c)|0] = audioChunk[i];
+                      f32[i%c][(i/c)|0] = (audioChunk[i] - 128)/128;
                     }
                     break;
                   default:
