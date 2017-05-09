@@ -66,7 +66,7 @@ function() {
     get audioIsPresent() {
       return !!(this.audioFlags & 1);
     },
-    get audioSampleRate() {
+    get sampleRate() {
       return this.dv.getUint16(12, true);
     },
     get videoFlags() {
