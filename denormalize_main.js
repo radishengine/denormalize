@@ -93,6 +93,22 @@ function() {
     get videoHeight() {
       return this.dv.getUint16(22, true);
     },
+    get frameDataOffset() {
+      return (this.bitsPerPixel === 8) ? 24 + 256*3 : 24;
+    },
+    get audioChunkSize() {
+      var size = Math.floor(this.sampleRate / this.framesPerSecond);
+      size *= this.audioChannels;
+      size *= this.audioBytesPerSample;
+      if (this.audioIsDPCM) size /= 2;
+      return size;
+    },
+    get durationString() {
+      var seconds = this.frameCount / this.framesPerSecond;
+      var minutes = (seconds / 60) | 0;
+      seconds = (seconds % 60) | 0;
+      return ('0' + minutes).slice(-2) + ':' + ('0' + seconds).slice(-2);
+    },
   };
   
   function GDV(blob) {
@@ -106,22 +122,45 @@ function() {
       Object.defineProperty(this, 'retrievedInfo', {value:promise, enumerable:true});
       return promise;
     },
+    get retrievedPalette() {
+      var self = this;
+      var promise = this.retrievedHeader.then(function(header) {
+        if (header.bitsPerPixel !== 8) return null;
+        return self.blob.readBuffered(24, 24 + 256*3).then(function(bytes) {
+          var pal = new Uint8Array(256 * 4);
+          for (var i = 0; i < 256; i++) {
+            var r = bytes[i*3], g = bytes[i*3 + 1], b = bytes[i*3 + 2];
+            r = (r << 2) | (r >>> 4);
+            g = (g << 2) | (g >>> 4);
+            b = (b << 2) | (b >>> 4);
+            pal[i*4] = r;
+            pal[i*4 + 1] = g;
+            pal[i*4 + 2] = b;
+            pal[i*4 + 3] = 0xff;
+          }
+          return new Uint32Array(pal.buffer, pal.byteOffset, 256);
+        });
+      });
+      Object.defineProperty(this, 'retrievedPalette', {value:promise, enumerable:true});
+      return promise;      
+    },
   };
   
   console.log('hello... newman world');
   
   var dragdrop = document.getElementById('dragdrop');
   
-  function createSection() {
+  function createSection(title) {
     var div = document.createElement('DIV');
     div.classList.add('section');
-    var button = document.createElement('BUTTON');
-    button.classList.add('close_button');
-    button.innerText = 'X';
-    button.onclick = function() {
+    div.appendChild(div.closeButton = document.createElement('BUTTON'));
+    div.closeButton.classList.add('close_button');
+    div.closeButton.innerText = 'X';
+    div.closeButton.onclick = function() {
       div.parentNode.removeChild(div);
     };
-    div.appendChild(button);
+    div.appendChild(div.title = document.createElement('H3'));
+    title.innerText = title || '';
     if (dragdrop.nextSibling) {
       dragdrop.parentNode.insertBefore(div, dragdrop.nextSibling);
     }
@@ -131,15 +170,23 @@ function() {
     var inside = document.createElement('DIV');
     inside.classList.add('content');
     div.appendChild(inside);
+    div.appendChild(div.buttons = document.createElement('DIV'));
+    div.button = function(text, onclick) {
+      var button = document.createElement('BUTTON');
+      button.innerText = text;
+      button.onclick = onclick;
+      div.buttons.appendChild(button);
+      return button;
+    };
     return inside;
   }
   
   function onfile(file) {
-    var section = createSection();
+    var section = createSection(file.name);
     if (/\.gdv$/i.test(file.name)) {
       var gdv = new GDV(file);
       gdv.retrievedHeader.then(function(header) {
-        console.log(header);
+        section.title.innerText += ' (' + header.durationString + ')';
         if (header.videoIsPresent) {
           section.appendChild(section.display = document.createElement('CANVAS'));
           section.display.width = header.videoWidth;
@@ -149,6 +196,9 @@ function() {
           section.ctx2d.fillStyle = 'black';
           section.ctx2d.fillRect(0, 0, section.display.width, section.display.height);
         }
+        section.button('Play', function() {
+          console.log('hi');
+        });
       });
     }
     else {
