@@ -213,7 +213,7 @@ function() {
           function onAnimationFrame() {
             reqId = null;
             if (frameCount < 1) {
-              section.display.dispatchEvent(new CustomEvent('stop'));
+              section.dispatchEvent(new CustomEvent('stop'));
               return;
             }
             if (ac.currentTime < nextFrameTime) {
