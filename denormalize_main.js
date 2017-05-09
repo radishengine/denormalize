@@ -28,6 +28,7 @@ function() {
       dragdrop.parentNode.appendChild(div);
     }
     var inside = document.createElement('DIV');
+    inside.classList.add('content');
     div.appendChild(inside);
     return inside;
   }
