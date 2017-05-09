@@ -260,7 +260,7 @@ function() {
         }
         return self.retrievedInterleavedFrames.then(function(interleaved) {
           var data = new Array(interleaved.length/2);
-          for (var i = 0; i < audioFrames.length; i++) {
+          for (var i = 0; i < data.length; i++) {
             data[i] = interleaved[i*2];
           }
           data.byteLength = interleaved.length * header.audioChunkSize;
