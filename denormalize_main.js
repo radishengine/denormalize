@@ -9,13 +9,15 @@ function() {
   
   var ac = new AudioContext();
   
+  const BUFFER_SIZE = 64 * 1024;
+  
   Blob.prototype.readBuffered = function(sliceFrom, sliceTo) {
     var buf = this.buffer;
     if (buf && sliceFrom >= buf.bufferOffset && sliceTo <= (buf.bufferOffset + buf.byteLength)) {
       return Promise.resolve(new Uint8Array(buf, sliceFrom - buf.bufferOffset, sliceTo - sliceFrom));
     }
-    var bufferStart = Math.floor(sliceFrom / (64 * 1024));
-    var bufferEnd = Math.min(this.size, Math.ceil(sliceTo / (64 * 1024)));
+    var bufferStart = Math.floor(sliceFrom / BUFFER_SIZE) * BUFFER_SIZE;
+    var bufferEnd = Math.min(this.size, Math.ceil(sliceTo / BUFFER_SIZE) * BUFFER_SIZE);
     var self = this;
     return new Promise(function(resolve, reject) {
       var fr = new FileReader;
