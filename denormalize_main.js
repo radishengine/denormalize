@@ -198,7 +198,7 @@ function() {
             list.push(blob.slice(offset, offset + header.audioChunkSize));
             offset += header.audioChunkSize;
           }
-          return blob.slice(offset, offset + 8).then(function(frameHeader) {
+          return blob.readBuffered(offset, offset + 8).then(function(frameHeader) {
             frameHeader = new GDVFrameHeader(frameHeader.buffer, frameHeader.byteOffset, frameHeader.byteLength);
             if (!frameHeader.hasValidSignature) {
               return Promise.reject('invalid frame header');
