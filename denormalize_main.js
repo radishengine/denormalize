@@ -35,7 +35,7 @@ function() {
   
   function onfile(file) {
     var section = createSection();
-    if (/\.gdv$/.test(file.name)) {
+    if (/\.gdv$/i.test(file.name)) {
       section.innerText = 'video!';
     }
     else {
