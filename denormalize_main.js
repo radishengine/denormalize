@@ -160,7 +160,7 @@ function() {
       div.parentNode.removeChild(div);
     };
     div.appendChild(div.title = document.createElement('H3'));
-    title.innerText = title || '';
+    div.title.innerText = title || '';
     if (dragdrop.nextSibling) {
       dragdrop.parentNode.insertBefore(div, dragdrop.nextSibling);
     }
