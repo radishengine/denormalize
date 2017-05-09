@@ -243,7 +243,7 @@ function() {
                   default:
                     throw new Error('unsupported');
                 }
-                sample.play(thisFrameTime);
+                sample.start(thisFrameTime);
               });
               readOffset += header.audioChunkSize;
             }
