@@ -290,7 +290,7 @@ function() {
         
         data.splice(0, 0, 'RIFF', fileSize, 'WAVE', 'fmt ', fmt, 'data', dataSize);
         
-        return new Blob(data, 'audio/wav');
+        return new Blob(data, {type:'audio/wav'});
       });
       Object.defineProperty(this, 'retrievedVideoFrames', {value:promise, enumerable:true});
       return promise;
