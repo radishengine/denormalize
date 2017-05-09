@@ -171,7 +171,7 @@ function() {
     inside.classList.add('content');
     div.appendChild(inside);
     div.appendChild(div.buttons = document.createElement('DIV'));
-    div.button = function(text, onclick) {
+    inside.button = function(text, onclick) {
       var button = document.createElement('BUTTON');
       button.innerText = text;
       button.onclick = onclick;
