@@ -13,6 +13,7 @@ function() {
   
   function createSection() {
     var div = document.createElement('DIV');
+    div.classList.add('section');
     var button = document.createElement('BUTTON');
     button.classList.add('close_button');
     button.innerText = 'X';
