@@ -99,7 +99,7 @@ function() {
   GDV.prototype = {
     get retrievedHeader() {
       var promise = this.blob.readBuffered(0, 24).then(function(bytes) {
-        return new GDVInfoSpec(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+        return new GDVHeaderSpec(bytes.buffer, bytes.byteOffset, bytes.byteLength);
       });
       Object.defineProperty(this, 'retrievedInfo', {value:promise, enumerable:true});
       return promise;
