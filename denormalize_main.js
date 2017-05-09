@@ -448,7 +448,7 @@ function() {
         section.stopButton.disabled = true;
         
         if (header.audioIsPresent) {
-          section.buttons.push(section.downloadWavButton = document.createElement('BUTTON'));
+          section.buttons.appendChild(section.downloadWavButton = document.createElement('BUTTON'));
           section.downloadWavButton.innerText = 'Download .WAV';
           section.downloadWavButton.onclick = function() {
             section.downloadWavButton.disabled = true;
