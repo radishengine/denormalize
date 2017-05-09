@@ -21,7 +21,7 @@ function() {
     };
     div.appendChild(button);
     if (dragdrop.nextSibling) {
-      dragdrop.parentNode.insertBefore(dragdrop.nextSibling, div);
+      dragdrop.parentNode.insertBefore(div, dragdrop.nextSibling);
     }
     else {
       dragdrop.parentNode.appendChild(div);
