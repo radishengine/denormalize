@@ -273,7 +273,7 @@ function() {
         var header = values[0], data = values[1];
         if (!data) return null;
         
-        var fmt = new DataView(new AudioBuffer(20));
+        var fmt = new DataView(new ArrayBuffer(20));
         fmt.setUint32(0, 16, true);
         fmt.setUint16(4, 1, true);
         fmt.setUint16(6, header.audioChannels, true);
@@ -282,10 +282,10 @@ function() {
         fmt.setUint16(16, header.audioChannels * header.audioBytesPerSample);
         fmt.setUint16(18, header.audioBytesPerSample * 8);
         
-        var fileSize = new DataView(new AudioBuffer(4));
+        var fileSize = new DataView(new ArrayBuffer(4));
         fileSize.setUint32(0, 36 + data.byteLength);
         
-        var dataSize = new DataView(new AudioBuffer(4));
+        var dataSize = new DataView(new ArrayBuffer(4));
         dataSize.setUint32(0, data.byteLength);
         
         data.splice(0, 0, 'RIFF', fileSize, 'WAVE', 'fmt ', fmt, 'data', dataSize);
