@@ -9,11 +9,37 @@ function() {
   
   console.log('hello... newman world');
   
-  function onfile(file) {
-    console.log(file);
+  var dragdrop = document.getElementById('dragdrop');
+  
+  function createSection() {
+    var div = document.createElement('DIV');
+    var button = document.createElement('BUTTON');
+    button.classList.add('close_button');
+    button.innerText = 'X';
+    button.onclick = function() {
+      div.parentNode.removeChild(div);
+    };
+    div.appendChild(button);
+    if (dragdrop.nextSibling) {
+      dragdrop.parentNode.insertBefore(dragdrop.nextSibling, div);
+    }
+    else {
+      dragdrop.parentNode.appendChild(div);
+    }
+    var inside = document.createElement('DIV');
+    div.appendChild(inside);
+    return inside;
   }
   
-  var dragdrop = document.getElementById('dragdrop');
+  function onfile(file) {
+    var section = createSection();
+    if (/\.gdv$/.test(file.name)) {
+      section.innerText = 'video!';
+    }
+    else {
+      section.innerText = 'unknown: ' + file.name;
+    }
+  }
   
   dragdrop.ondragenter = function(e) {
     if (e.target !== this) return;
