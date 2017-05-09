@@ -149,7 +149,6 @@ function() {
           section.ctx2d.fillStyle = 'black';
           section.ctx2d.fillRect(0, 0, section.display.width, section.display.height);
         }
-        section.innerText = header.videoWidth + 'x' + header.videoHeight;
       });
     }
     else {
