@@ -263,7 +263,7 @@ function() {
           for (var i = 0; i < data.length; i++) {
             data[i] = interleaved[i*2];
           }
-          data.byteLength = interleaved.length * header.audioChunkSize;
+          data.byteLength = data.length * header.audioChunkSize;
           return data;
         });
       });
