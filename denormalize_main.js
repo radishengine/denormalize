@@ -140,6 +140,15 @@ function() {
       var gdv = new GDV(file);
       gdv.retrievedHeader.then(function(header) {
         console.log(header);
+        if (header.videoIsPresent) {
+          section.appendChild(section.display = document.createElement('CANVAS'));
+          section.display.width = header.videoWidth;
+          section.display.height = header.videoHeight;
+          section.ctx2d = section.display.getContext('2d');
+          section.pixelBuffer = section.ctx2d.createImageData(section.display.width, section.display.height);
+          section.fillStyle = 'black';
+          section.fillRect(0, 0, section.display.width, section.display.height);
+        }
         section.innerText = header.videoWidth + 'x' + header.videoHeight;
       });
     }
