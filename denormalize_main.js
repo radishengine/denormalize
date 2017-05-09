@@ -60,7 +60,7 @@ function() {
   dragdrop.ondrop = function(e) {
     e.preventDefault();
     this.classList.remove('dropping');
-    for (var i = 0; i < e.dataTransfer.files.length; i++) {
+    for (var i = e.dataTransfer.files.length - 1; i >= 0; i--) {
       onfile(e.dataTransfer.files[i]);
     }
   };
