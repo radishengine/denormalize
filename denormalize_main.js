@@ -9,7 +9,7 @@ function() {
   
   var ac = new AudioContext();
   
-  Blob.prototype.getBuffered = function(sliceFrom, sliceTo) {
+  Blob.prototype.readBuffered = function(sliceFrom, sliceTo) {
     var buf = this.buffer;
     if (buf && sliceFrom >= buf.bufferOffset && sliceTo <= (buf.bufferOffset + buf.byteLength)) {
       return Promise.resolve(new Uint8Array(buf, sliceFrom - buf.bufferOffset, sliceTo - sliceFrom));
