@@ -257,7 +257,7 @@ function() {
           return audioFrames;
         });
       });
-      Object.defineProperty(this, 'retrievedVideoFrames', {value:promise, enumerable:true});
+      Object.defineProperty(this, 'retrievedAudioFrames', {value:promise, enumerable:true});
       return promise;
     },
     getWav: function() {
@@ -306,7 +306,6 @@ function() {
         
         return new Blob(data, {type:'audio/wav'});
       });
-      Object.defineProperty(this, 'retrievedVideoFrames', {value:promise, enumerable:true});
       return promise;
     },
     getAudioBuffer: function(audioContext) {
