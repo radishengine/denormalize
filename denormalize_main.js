@@ -312,7 +312,9 @@ function() {
       return this.getWav()
         .then(function(blob) {
           if (blob) {
-            return blob.readArrayBuffer().then(audioContext.decodeAudioData);
+            return blob.readArrayBuffer().then(function(arrayBuffer) {
+              return audioContext.decodeAudioData(arrayBuffer);
+            });
           }
           return null;
         });
