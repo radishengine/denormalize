@@ -34,6 +34,20 @@ function() {
     });
   };
   
+  Blob.prototype.readArrayBuffer = function() {
+    var self = this;
+    return new Promise(function(resolve, reject) {
+      var fr = new FileReader;
+      fr.onload = function() {
+        resolve(this.result);
+      };
+      fr.onerror = function() {
+        reject(this.error);
+      };
+      fr.readAsArrayBuffer(self);
+    });
+  };
+  
   function GDVHeaderSpec(buffer, byteOffset, byteLength) {
     this.dv = new DataView(buffer, byteOffset, byteLength);
   }
@@ -295,6 +309,15 @@ function() {
       Object.defineProperty(this, 'retrievedVideoFrames', {value:promise, enumerable:true});
       return promise;
     },
+    getAudioBuffer: function(audioContext) {
+      return this.getWav()
+        .then(function(blob) {
+          if (blob) {
+            return blob.readArrayBuffer().then(audioContext.decodeAudioData);
+          }
+          return null;
+        });
+    },
   };
   
   console.log('hello... newman world');
@@ -337,99 +360,75 @@ function() {
           section.display.width = header.videoWidth;
           section.display.height = header.videoHeight;
           section.ctx2d = section.display.getContext('2d');
-          section.pixelBuffer = section.ctx2d.createImageData(section.display.width, section.display.height);
           section.ctx2d.fillStyle = 'black';
           section.ctx2d.fillRect(0, 0, section.display.width, section.display.height);
         }
         section.addEventListener('play', function() {
-          var destination = ac.createGain();
-          destination.connect(ac.destination);
-          section.dispatchEvent(new CustomEvent('playing'));
-          var frameCount = header.frameCount;
-          const baseTime = ac.currentTime;
-          var nextFrameTime = baseTime;
-          var reqId = null;
-          function stop() {
-            if (reqId !== null) {
-              cancelAnimationFrame(reqId);
-              reqId = null;
+          Promise.all([gdv.getVideoFrames(), gdv.getAudioBuffer(ac)])
+          .then(function(values) {
+            var frames = values[0], buffer = values[1];
+            var destination = ac.createGain();
+            destination.connect(ac.destination);
+            var src = ac.createBufferSource();
+            src.buffer = buffer;
+            const baseTime = ac.currentTime + 0.2;
+            const endTime = baseTime + header.frameCount/header.framesPerSecond;
+            src.start(baseTime);
+            var reqId = null;
+            function stop() {
+              if (reqId !== null) {
+                cancelAnimationFrame(reqId);
+                reqId = null;
+              }
+              destination.disconnect();
+              section.removeEventListener('stop', stop);
+              section.dispatchEvent(new CustomEvent('stopped'));
             }
-            destination.disconnect();
-            section.removeEventListener('stop', stop);
-            section.dispatchEvent(new CustomEvent('stopped'));
-          }
-          section.addEventListener('stop', stop);
-          var readOffset = header.frameDataOffset;
-          function onAnimationFrame() {
-            reqId = null;
-            if (frameCount < 1) {
-              section.dispatchEvent(new CustomEvent('stop'));
-              return;
+            section.addEventListener('stop', stop);
+            section.dispatchEvent(new CustomEvent('playing'));
+            if (!frames || frames.length === 0) return;
+            frames = frames.slice();
+            var nextFrameTime = baseTime;
+            var decodedFrameQueue = [];
+            function decode(frameData) {
+              var pixelBuffer = section.ctx2d.createImageData(section.display.width, section.display.height);
+              return pixelBuffer;
             }
-            if (ac.currentTime < nextFrameTime) {
-              return;
+            function pullFrames(n) {
+              while (n-- > decodedFrameQueue.length) {
+                if (frames.length === 0) return;
+                var frame = frames.shift();
+                decodedFrameQueue.push(Promise.all([frame.header, frame.read()]).then(decode));
+              }
             }
-            var thisFrameTime = nextFrameTime;
-            nextFrameTime += 1/header.framesPerSecond;
-            frameCount--;
-            if (header.audioIsPresent) {
-              file.readBuffered(readOffset, readOffset + header.audioChunkSize)
-              .then(function(audioChunk) {
-                var sample = ac.createBufferSource();
-                sample.connect(destination);
-                var sampleCount = Math.floor(header.sampleRate / header.framesPerSecond);
-                sample.buffer = ac.createBuffer(2, sampleCount, header.sampleRate);
-                const c = header.audioChannels;
-                var f32 = new Array(c);
-                for (var i = 0; i < c; i++) {
-                  f32[i] = sample.buffer.getChannelData(i);
-                }
-                switch (header.audioBytesPerSample) {
-                  case 1:
-                    for (var i = 0; i < sampleCount; i++) {
-                      f32[i%c][(i/c)|0] = (audioChunk[i] - 128)/128;
-                    }
-                    break;
-                  default:
-                    throw new Error('unsupported');
-                }
-                sample.start(thisFrameTime);
-              });
-              readOffset += header.audioChunkSize;
-            }
-            if (header.videoIsPresent) {
-              file.readBuffered(readOffset, readOffset + 4 + header.maxFrameSize)
-              .then(function(frameData) {
-                var dv = new DataView(frameData.buffer, frameData.byteOffset, 8);
-                if (dv.getUint16(0, true) !== 0x1305) {
-                  throw new Error('video frame header not found');
-                }
-                var dataSize = dv.getUint16(2, true);
-                var frameFlags = dv.getUint32(4, true);
-                readOffset += 8 + dataSize;
-                reqId = requestAnimationFrame(onAnimationFrame);
-                frameData = frameData.subarray(8, 8 + dataSize);
-                var encoding = frameFlags & 15;
-                var offset = (frameFlags >>> 8);
-                var halfResMode = !!(frameFlags & 32);
-                var quarterResMode = !!(frameFlags & 16);
-                var show = !!(frameFlags & 128);
-              });
-            }
-            else {
+            function onAnimationFrame() {
               reqId = requestAnimationFrame(onAnimationFrame);
+              if (ac.currentTime < nextFrameTime) {
+                return;
+              }
+              if (ac.currentTime >= endTime) {
+                cancelAnimationFrame(reqId);
+                reqId = null;
+                section.dispatchEvent(new CustomEvent('stopped'));
+                return;
+              }
+              nextFrameTime += 1/header.framesPerSecond;
+              if (!header.videoIsPresent) return;
+              pullFrames(5);
+              decodedFrameQueue.shift().then(function(imageData) {
+                section.ctx2d.putImageData(imageData, 0, 0);
+              });
             }
-          }
-          reqId = requestAnimationFrame(onAnimationFrame);
+            pullFrames(5);
+            onAnimationFrame();
+          });
         });
         section.buttons.appendChild(section.playButton = document.createElement('BUTTON'));
         section.playButton.innerText = 'Play';
         section.playButton.onclick = function() {
           section.dispatchEvent(new CustomEvent('play'));
-        };
-        section.addEventListener('playing', function() {
           section.playButton.disabled = true;
-        });
+        };
         section.addEventListener('stopped', function() {
           section.playButton.disabled = false;
         });
