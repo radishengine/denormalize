@@ -278,9 +278,9 @@ function() {
         fmt.setUint16(4, 1, true);
         fmt.setUint16(6, header.audioChannels, true);
         fmt.setUint32(8, header.sampleRate, true);
-        fmt.setUint32(12, header.sampleRate * header.audioChannels * header.audioBytesPerSample);
-        fmt.setUint16(16, header.audioChannels * header.audioBytesPerSample);
-        fmt.setUint16(18, header.audioBytesPerSample * 8);
+        fmt.setUint32(12, header.sampleRate * header.audioChannels * header.audioBytesPerSample, true);
+        fmt.setUint16(16, header.audioChannels * header.audioBytesPerSample, true);
+        fmt.setUint16(18, header.audioBytesPerSample * 8, true);
         
         var fileSize = new DataView(new ArrayBuffer(4));
         fileSize.setUint32(0, 36 + data.byteLength, true);
