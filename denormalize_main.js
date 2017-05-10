@@ -364,7 +364,7 @@ function() {
           section.ctx2d.fillRect(0, 0, section.display.width, section.display.height);
         }
         section.addEventListener('play', function() {
-          Promise.all([gdv.getVideoFrames(), gdv.getAudioBuffer(ac)])
+          Promise.all([gdv.retrievedVideoFrames, gdv.getAudioBuffer(ac)])
           .then(function(values) {
             var frames = values[0], buffer = values[1];
             var destination = ac.createGain();
