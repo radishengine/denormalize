@@ -283,10 +283,10 @@ function() {
         fmt.setUint16(18, header.audioBytesPerSample * 8);
         
         var fileSize = new DataView(new ArrayBuffer(4));
-        fileSize.setUint32(0, 36 + data.byteLength);
+        fileSize.setUint32(0, 36 + data.byteLength, true);
         
         var dataSize = new DataView(new ArrayBuffer(4));
-        dataSize.setUint32(0, data.byteLength);
+        dataSize.setUint32(0, data.byteLength, true);
         
         data.splice(0, 0, 'RIFF', fileSize, 'WAVE', 'fmt ', fmt, 'data', dataSize);
         
