@@ -399,7 +399,7 @@ function() {
               while (n-- > decodedFrameQueue.length) {
                 if (frames.length === 0) return;
                 var frame = frames.shift();
-                decodedFrameQueue.push(Promise.all([frame.header, frame.read()]).then(decode));
+                decodedFrameQueue.push(Promise.all([frame.header, frame.readArrayBuffer()]).then(decode));
               }
             }
             function onAnimationFrame() {
