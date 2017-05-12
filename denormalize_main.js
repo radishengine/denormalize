@@ -440,15 +440,15 @@ function() {
               }
               function initPixels(pixels) {
                 pixels = new Uint8Array(pixels);
-                if (header.quarterResMode) {
-                  for (var pos = 2; pos < pixels.length; pos += 2) {
-                    pixels[pos >> 1] = pixels[pos];
-                  }
-                }
-                else if (header.halfResMode) {
+                if (header.halfResMode) {
                   const lineSize = newFrame.imageData.width;
                   for (var pos = lineSize*2; pos < pixels.length; pos += lineSize*2) {
                     pixels.set(pixels.subarray(pos, pos + lineSize), pos >>> 1);
+                  }
+                }
+                if (header.quarterResMode) {
+                  for (var pos = 2; pos < pixels.length; pos += 2) {
+                    pixels[pos >> 1] = pixels[pos];
                   }
                 }
                 return pixels;
@@ -459,7 +459,7 @@ function() {
                     pixels[pos << 1] = pixels[(pos << 1) + 1] = pixels[pos];
                   }
                 }
-                else if (header.halfResMode) {
+                if (header.halfResMode) {
                   const lineSize = newFrame.imageData.width;
                   for (var pos = pixels.length/2 - lineSize; pos > 0; pos -= lineSize) {
                     var sub = pixels.subarray(pos, pos + lineSize);
