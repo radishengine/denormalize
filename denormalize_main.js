@@ -460,7 +460,7 @@ function() {
                   for (var pos = pixels.length/2 - lineSize; pos > 0; pos -= lineSize) {
                     var sub = pixels.subarray(pos, pos + lineSize);
                     pixels.set(sub, pos << 1);
-                    pixels.set(sub, (pos << 1) + 1);
+                    pixels.set(sub, (pos << 1) + lineSize);
                   }
                   pixels.set(pixels.subarray(0, lineSize), lineSize);
                 }
