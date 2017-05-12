@@ -448,7 +448,7 @@ function() {
                 function readBits(n) {
                   var retVal = queue & ((1 << n) - 1);
                   queue >>>= n;
-                  if ((qsize -= n) < 0) {
+                  if ((qsize -= n) <= 0) {
                     queue |= dv.getUint16(dataPos, true) << (qsize += 16);
                     dataPos += 2;
                   }
