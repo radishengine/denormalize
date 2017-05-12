@@ -482,7 +482,7 @@ function() {
                       var b = data[dataPos++];
                       if (b & 0x80) {
                         b = ((b & 0x7F) << 8) | data[dataPos++];
-                        pixPos += 146 + b;
+                        //pixPos += 146 + b;
                       }
                       else {
                         pixPos += 18 + b;
