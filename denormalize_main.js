@@ -441,7 +441,9 @@ function() {
               function initPixels(pixels) {
                 pixels = new Uint8Array(pixels);
                 if (header.quarterResMode) {
-                  throw new Error('NYI');
+                  for (var pos = 2; pos < pixels.length; pos += 2) {
+                    pixels[pos >> 1] = pixels[pos];
+                  }
                 }
                 else if (header.halfResMode) {
                   const lineSize = newFrame.imageData.width;
@@ -453,7 +455,9 @@ function() {
               }
               function finalizePixels(pixels) {
                 if (header.quarterResMode) {
-                  throw new Error('NYI');
+                  for (var pos = pixels.length/2 - 1; pos > 0; pos--) {
+                    pixels[pos << 1] = pixels[(pos << 1) + 1] = pixels[pos];
+                  }
                 }
                 else if (header.halfResMode) {
                   const lineSize = newFrame.imageData.width;
