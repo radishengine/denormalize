@@ -54,6 +54,20 @@ function() {
     });
   };
   
+  Blob.prototype.download = function(filename) {
+    var link = document.createElement('A');
+    link.setAttribute('href', URL.createObjectURL(this));
+    link.setAttribute('download', filename || 'file.dat');
+    return new Promise(function(resolve, reject) {
+      document.body.appendChild(link);
+      link.onclick = function() {
+        link.parentNode.removeChild(link);
+        resolve();
+      };
+      link.click();
+    });
+  };
+  
   function GDVFileHeader(buffer, byteOffset, byteLength) {
     this.dv = new DataView(buffer, byteOffset, byteLength);
   }
@@ -810,15 +824,10 @@ function() {
           section.downloadWavButton.onclick = function() {
             section.downloadWavButton.disabled = true;
             gdv.getWav().then(function(blob) {
-              var link = document.createElement('A');
-              link.setAttribute('href', URL.createObjectURL(blob));
-              link.setAttribute('download', (file.name || 'gdv').replace(/\..*/, '') + '.wav');
-              document.body.appendChild(link);
-              link.onclick = function() {
-                link.parentNode.removeChild(link);
-                section.downloadWavButton.disabled = false;
-              };
-              link.click();
+              return blob.download((file.name || 'gdv').replace(/\..*/, '') + '.wav');
+            })
+            .then(function() {
+              section.downloadWavButton.disabled = false;
             });
           };
         }
