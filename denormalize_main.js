@@ -703,7 +703,7 @@ function() {
                         }
                         else {
                           offset = pixPos - (4096 - offset);
-                          pixels.put(pixels.subarray(offset, offset + length), pixPos);
+                          pixels.set(pixels.subarray(offset, offset + length), pixPos);
                           pixPos += length;
                         }
                         continue;
