@@ -143,7 +143,7 @@ function() {
       return this.dv.getUint32(4, true);
     },
     get encoding() {
-      return !!(this.flags & 15);
+      return this.flags & 15;
     },
     get offset() {
       return this.flags >>> 8;
