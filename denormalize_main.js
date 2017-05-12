@@ -48,6 +48,12 @@ function() {
     });
   };
   
+  Blob.prototype.readAllBytes = function() {
+    return this.readArrayBuffer().then(function(ab) {
+      return new Uint8Array(ab);
+    });
+  };
+  
   function GDVHeaderSpec(buffer, byteOffset, byteLength) {
     this.dv = new DataView(buffer, byteOffset, byteLength);
   }
@@ -635,7 +641,7 @@ function() {
               while (n-- > decodedFrameQueue.length) {
                 if (frames.length === 0) return;
                 var frame = frames.shift();
-                decodedFrameQueue.push(lastFrame = Promise.all([lastFrame, frame.header, frame.readArrayBuffer()]).then(decode));
+                decodedFrameQueue.push(lastFrame = Promise.all([lastFrame, frame.header, frame.readAllBytes()]).then(decode));
               }
             }
             function onAnimationFrame() {
