@@ -457,7 +457,7 @@ function() {
                 }
                 else if (header.halfResMode) {
                   const lineSize = newFrame.imageData.width;
-                  for (var pos = pixels.length >> 1; pos > 0; pos -= lineSize) {
+                  for (var pos = pixels.length/2 - lineSize; pos > 0; pos -= lineSize) {
                     var sub = pixels.subarray(pos, pos + lineSize);
                     pixels.set(sub, pos << 1);
                     pixels.set(sub, (pos << 1) + 1);
