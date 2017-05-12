@@ -391,7 +391,7 @@ function() {
             destination.connect(ac.destination);
             var src = ac.createBufferSource();
             src.connect(destination);
-            src.buffer = buffer;
+            if (buffer) src.buffer = buffer;
             const baseTime = ac.currentTime + 0.2;
             const endTime = baseTime + header.frameCount/header.framesPerSecond;
             src.start(baseTime);
