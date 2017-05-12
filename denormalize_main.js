@@ -618,7 +618,6 @@ function() {
                     return;
                 }
               }
-              console.log(header.encoding, data.length);
               switch (header.encoding) {
                 case 0: // new palette
                 case 1: // new palette, fill with color 0
