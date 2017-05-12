@@ -438,8 +438,37 @@ function() {
                 }
                 return result;
               }
+              function initPixels(pixels) {
+                pixels = new Uint8Array(pixels);
+                if (header.quarterResMode) {
+                  throw new Error('NYI');
+                }
+                else if (header.halfResMode) {
+                  const lineSize = newFrame.imageData.width;
+                  for (var pos = lineSize*2; pos < pixels.length; pos += lineSize*2) {
+                    pixels.set(pixels.subarray(pos, pos + lineSize), pos >>> 1);
+                  }
+                }
+                return pixels;
+              }
+              function finalizePixels(pixels) {
+                if (header.quarterResMode) {
+                  throw new Error('NYI');
+                }
+                else if (header.halfResMode) {
+                  const lineSize = newFrame.imageData.width;
+                  for (var pos = pixels.length >> 1; pos > 0; pos -= lineSize) {
+                    var sub = pixels.subarray(pos, pos + lineSize);
+                    pixels.set(sub, pos << 1);
+                    pixels.set(sub, (pos << 1) + 1);
+                  }
+                  pixels.set(pixels.subarray(0, lineSize), lineSize);
+                }
+                return pixels;
+              }
               function readPacked() {
-                var pixels = newFrame.pix8 = new Uint8Array(newFrame.pix8);
+                var pixels = newFrame.pix8 = initPixels(newFrame.pix8);
+                
                 var pixPos = header.offset;
                 var dv = new DataView(data.buffer, data.byteOffset, data.byteLength);
                 var queue = dv.getUint32(0, true);
@@ -517,7 +546,11 @@ function() {
                     var next4 = readBits(4);
                     var offset = (next4 << 8) | data[dataPos++];
                     if (subtag === 0 && offset > 0xF80) {
-                      if (offset === 0xFFF) return; // end of stream
+                      if (offset === 0xFFF) {
+                        // end of stream
+                        finalizePixels(pixels);
+                        return;
+                      }
                       var length = (offset & 0xF) + 2;
                       offset = (offset >>> 4) & 7;
                       var px1 = pixels[pixPos - (offset + 1)];
