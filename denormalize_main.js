@@ -633,7 +633,12 @@ function() {
                   break;
                 case 6:
                 case 8:
-                  readPacked();
+                  try {
+                    readPacked();
+                  }
+                  catch (e) {
+                    console.error(e);
+                  }
                   if (header.isShown) redraw();
                   break;
                 default:
