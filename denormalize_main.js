@@ -497,7 +497,8 @@ function() {
                         while (length--) pixels[pixPos++] = repPixel;
                         continue;
                       }
-                      pixels.set(pixels.subarray(pixPos - offset, length), pixPos);
+                      offset = pixPos - offset;
+                      pixels.set(pixels.subarray(offset, offset + length), pixPos);
                       pixPos += length;
                       continue;
                     }
@@ -527,7 +528,8 @@ function() {
                       while (length--) pixels[pixPos++] = repPixel;
                       continue;
                     }
-                    pixels.set(pixels.subarray(pixPos - offset, length), pixPos);
+                    offset = pixPos - offset;
+                    pixels.set(pixels.subarray(offset, offset + length), pixPos);
                     pixPos += length;
                     continue;
                   case 63:
@@ -551,7 +553,8 @@ function() {
                       while (length--) pixels[pixPos++] = repPixel;
                       continue;
                     }
-                    pixels.set(pixels.subarray(pixPos - offset, length), pixPos);
+                    offset = pixPos - offset;
+                    pixels.set(pixels.subarray(offset, offset + length), pixPos);
                     pixPos += length;
                     continue;
                   case 83:
@@ -562,6 +565,7 @@ function() {
                       length = (firstByte & 0x3F) + 8;
                       offset = (top4 << 8) | nextByte;
                       offset = pixPos - (offset + 1);
+                      offset = pixPos - offset;
                       pixels.set(pixels.subarray(offset, offset + length), pixPos);
                       continue;
                     }
@@ -591,7 +595,8 @@ function() {
                       while (length--) pixels[pixPos++] = repPixel;
                       continue;
                     }
-                    pixels.set(pixels.subarray(pixPos - offset, length), pixPos);
+                    offset = pixPos - offset;
+                    pixels.set(pixels.subarray(offset, offset + length), pixPos);
                     pixPos += length;
                     continue;
                   default:
