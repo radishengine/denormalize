@@ -54,10 +54,10 @@ function() {
     });
   };
   
-  function GDVHeaderSpec(buffer, byteOffset, byteLength) {
+  function GDVFileHeader(buffer, byteOffset, byteLength) {
     this.dv = new DataView(buffer, byteOffset, byteLength);
   }
-  GDVHeaderSpec.prototype = {
+  GDVFileHeader.prototype = {
     get signature() {
       return this.dv.getUint32(0, true);
     },
@@ -171,7 +171,7 @@ function() {
   GDV.prototype = {
     get retrievedHeader() {
       var promise = this.blob.readBuffered(0, 24).then(function(bytes) {
-        return new GDVHeaderSpec(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+        return new GDVFileHeader(bytes.buffer, bytes.byteOffset, bytes.byteLength);
       });
       Object.defineProperty(this, 'retrievedHeader', {value:promise, enumerable:true});
       return promise;
@@ -360,7 +360,10 @@ function() {
     var section = createSection(file.name);
     if (/\.gdv$/i.test(file.name)) {
       var gdv = new GDV(file);
-      Promise.all([gdv.retrievedHeader, gdv.retrievedPalette]).then(function(values) {
+      Promise.all([
+        gdv.retrievedHeader
+        ,gdv.retrievedPalette
+      ]).then(function(values) {
         var header = values[0], palette = values[1];
         section.titleElement.innerText += ' (' + header.durationString + ')';
         var lastFrame;
@@ -379,8 +382,10 @@ function() {
           });
         }
         section.addEventListener('play', function() {
-          Promise.all([gdv.retrievedVideoFrames, gdv.getAudioBuffer(ac)])
-          .then(function(values) {
+          Promise.all([
+            gdv.retrievedVideoFrames
+            ,gdv.getAudioBuffer(ac)
+          ]).then(function(values) {
             var frames = values[0], buffer = values[1];
             var destination = ac.createGain();
             destination.connect(ac.destination);
@@ -469,43 +474,50 @@ function() {
                   case 61:
                   case 81:
                     if (!readBits(1)) {
-                      pixPos += readBits(4) + 2;
-                      continue;
+                      pixPos += 2 + readBits(4);
                     }
-                    var b = data[dataPos++];
-                    if (b & 0x80) {
-                      b = ((b & 0x7F) << 8) | data[dataPos++];
-                      pixPos += b + 146;
-                      continue;
+                    else {
+                      var b = data[dataPos++];
+                      if (b & 0x80) {
+                        b = ((b & 0x7F) << 8) | data[dataPos++];
+                        pixPos += 146 + b;
+                      }
+                      else {
+                        pixPos += 18 + b;
+                      }
                     }
-                    pixPos += b + 18;
                     continue;
                   case 62:
                   case 82:
                     var subtag = readBits(2);
                     if (subtag === 3) {
+                      var offset, length;
                       var b = data[dataPos++];
-                      var length = (b & 0x80) ? 3 : 2;
-                      var offset = b & 0x7F;
+                      if (b & 0x80) {
+                        length = 3; offset = b & 0x7F;
+                      }
+                      else {
+                        length = 2; offset = b;
+                      }
                       if (offset === 0) {
                         var repPixel = (pixPos === 0) ? 0xFF : pixels[pixPos-1];
                         while (length--) pixels[pixPos++] = repPixel;
-                        continue;
                       }
-                      if (++offset > pixPos) {
+                      else if (++offset > pixPos) {
                         var repPixel = findColorForInvalidOffset(offset - pixPos);
                         while (length--) pixels[pixPos++] = repPixel;
-                        continue;
                       }
-                      offset = pixPos - offset;
-                      pixels.set(pixels.subarray(offset, offset + length), pixPos);
-                      pixPos += length;
+                      else {
+                        offset = pixPos - offset;
+                        pixels.set(pixels.subarray(offset, offset + length), pixPos);
+                        pixPos += length;
+                      }
                       continue;
                     }
                     var next4 = readBits(4);
                     var offset = (next4 << 8) | data[dataPos++];
-                    if (subtag === 0 && offset === 0xFFF) return; // end of stream
                     if (subtag === 0 && offset > 0xF80) {
+                      if (offset === 0xFFF) return; // end of stream
                       var length = (offset & 0xF) + 2;
                       offset = (offset >>> 4) & 7;
                       var px1 = pixels[pixPos - (offset + 1)];
@@ -551,38 +563,39 @@ function() {
                     if (offset > pixPos) {
                       var repPixel = findColorForInvalidOffset(offset - pixPos);
                       while (length--) pixels[pixPos++] = repPixel;
-                      continue;
                     }
-                    offset = pixPos - offset;
-                    pixels.set(pixels.subarray(offset, offset + length), pixPos);
-                    pixPos += length;
+                    else {
+                      offset = pixPos - offset;
+                      pixels.set(pixels.subarray(offset, offset + length), pixPos);
+                      pixPos += length;
+                    }
                     continue;
                   case 83:
                     var firstByte = data[dataPos++];
                     if ((firstByte & 0xC0) === 0xC0) {
-                      var top4 = readBits(4)
+                      var top4 = readBits(4);
                       var nextByte = data[dataPos++];
                       length = (firstByte & 0x3F) + 8;
                       offset = (top4 << 8) | nextByte;
-                      offset = pixPos - (offset + 1);
-                      offset = pixPos - offset;
+                      offset = pixPos + 1 + offset;
                       pixels.set(pixels.subarray(offset, offset + length), pixPos);
+                      pixPos += length;
                       continue;
                     }
                     var length, offset;
-                    if (!(firstByte & 0x80)) {
+                    if (firstByte & 0x80) {
+                      // read bits BEFORE read byte!
+                      var top4 = readBits(4);
+                      var nextByte = data[dataPos++];
+                      length = 14 + (firstByte & 0x3F);
+                      offset = (top4 << 8) | nextByte;
+                    }
+                    else {
                       var bits6To4 = firstByte >>> 4;
                       var bits3To0 = firstByte & 0xF;
                       var nextByte = data[dataPos++];
                       length = bits6To4 + 6;
                       offset = (bits3To0 << 8) | nextByte;
-                    }
-                    else {
-                      // read bits BEFORE read byte!
-                      var top_4 = readBits(4);
-                      var nextByte = data[dataPos++];
-                      length = 14 + (firstByte & 0x3F);
-                      offset = ((top_4 << 8) | nextByte);
                     }
                     if (offset == 0xFFF) {
                       var repPixel = (pixPos === 0) ? 0xFF : pixels[pixPos-1];
@@ -593,11 +606,12 @@ function() {
                     if (offset > pixPos) {
                       var repPixel = findColorForInvalidOffset(offset - pixPos);
                       while (length--) pixels[pixPos++] = repPixel;
-                      continue;
                     }
-                    offset = pixPos - offset;
-                    pixels.set(pixels.subarray(offset, offset + length), pixPos);
-                    pixPos += length;
+                    else {
+                      offset = pixPos - offset;
+                      pixels.set(pixels.subarray(offset, offset + length), pixPos);
+                      pixPos += length;
+                    }
                     continue;
                   default:
                     console.error('unknown packed mode');
