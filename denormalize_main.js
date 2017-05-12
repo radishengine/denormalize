@@ -681,6 +681,61 @@ function() {
                 case 3:
                   // do nothing!
                   break;
+                case 5:
+                  var pixels = initPixels(newFrame.pix8);
+                  var pixPos = header.offset;
+                  var dataPos = 0;
+                  decoding: for (;;) {
+                    var twiddles = data[dataPos++];
+                    var rshift = 6;
+                    do switch ((twiddles >>> rshift) & 3) {
+                      case 0:
+                        pixels[pixPos++] = data[dataPos++];
+                        continue;
+                      case 1:
+                        var byte_a = data[dataPos++];
+                        var byte_b = data[dataPos++];
+                        var length = (byte_a & 0x0F) + 3;
+                        var offset = ((byte_a & 0xF0) << 4) | byte_b;
+                        if (offset === 0xFFF) {
+                          var repPixel = (pixPos === 0) ? 0xFF : pixels[pixPos-1];
+                          while (length--) pixels[pixPos++] = repPixel;
+                        }
+                        else {
+                          offset = pixPos - (4096 - offset);
+                          pixels.put(pixels.subarray(offset, offset + length), pixPos);
+                          pixPos += length;
+                        }
+                        continue;
+                      case 2:
+                        var length = data[dataPos++];
+                        if (length === 0) {
+                          // end of stream
+                          break decoding;
+                        }
+                        if (length === 0xFF) {
+                          length = data[dataPos++];
+                          length |= data[dataPos++] << 8;
+                        }
+                        pixPos += length;
+                        continue;
+                      case 3:
+                        var byte = data[dataPos++];
+                        var offset = byte >> 2, length = (byte & 0x03) + 2;
+                        if (offset === 0) {
+                          var repPixel = pixPos === 0 ? 0xFF : pixels[pixPos-1];
+                          while (length--) pixels[pixPos++] = repPixel;
+                        }
+                        else {
+                          offset = pixPos - (offset - 1);
+                          pixels.set(pixels.subarray(offset, offset + length), pixPos);
+                          pixPos += length;
+                        }
+                        continue;
+                    } while ((rshift -= 2) >= 0);
+                  }
+                  newFrame.pix8 = finalizePixels(pixels);
+                  break;
                 case 6:
                 case 8:
                   try {
