@@ -161,7 +161,7 @@ function() {
       return !!(this.flags & 16);
     },
     get isShown() {
-      return !!(this.flags & 128);
+      return !(this.flags & 128);
     },
   };
   
