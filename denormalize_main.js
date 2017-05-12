@@ -457,7 +457,6 @@ function() {
                 for (;;) switch (header.encoding*10 + readBits(2)) {
                   case 60:
                   case 80:
-                    console.info([header.encoding, 0, dataPos, pixPos]);
                     if (!readBits(1)) {
                       pixels[pixPos++] = data[dataPos++];
                       continue;
@@ -474,7 +473,6 @@ function() {
                     continue;
                   case 61:
                   case 81:
-                    console.info([header.encoding, 1, dataPos, pixPos]);
                     if (!readBits(1)) {
                       pixPos += 2 + readBits(4);
                     }
@@ -491,7 +489,6 @@ function() {
                     continue;
                   case 62:
                   case 82:
-                    console.info([header.encoding, 2, dataPos, pixPos]);
                     var subtag = readBits(2);
                     if (subtag === 3) {
                       var offset, length;
@@ -548,7 +545,6 @@ function() {
                     pixPos += length;
                     continue;
                   case 63:
-                    console.info([header.encoding, 3, dataPos, pixPos]);
                     var firstByte = data[dataPos++];
                     var length = firstByte >>> 4;
                     if (length === 15) {
@@ -575,7 +571,6 @@ function() {
                     }
                     continue;
                   case 83:
-                    console.info([header.encoding, 3, dataPos, pixPos]);
                     var firstByte = data[dataPos++];
                     if ((firstByte & 0xC0) === 0xC0) {
                       var top4 = readBits(4);
