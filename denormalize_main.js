@@ -784,7 +784,7 @@ function() {
           if (fileHeader.videoIsPresent) {
             videoSize += GDVFrameHeader.byteLength;
             if ((pos + audioSize + videoSize) > bytes.length) break;
-            var frameHeader = new GDVFrameHeader(buffer, pos + audioSize, 8);
+            var frameHeader = new GDVFrameHeader(buffer, pos + audioSize, GDVFrameHeader.byteLength);
             if (!frameHeader.hasValidSignature) {
               return Promise.reject('invalid video frame');
             }
