@@ -210,6 +210,10 @@ function() {
     get isShown() {
       return !(this.flags & 128);
     },
+    getClearColor: function(bitsPerPixel) {
+      if (bitsPerPixel !== 8 || !(this.flags >>> 8)) return 0;
+      return 0xff;
+    },
   };
   GDVFrameHeader.byteLength = 8;
   
@@ -587,10 +591,14 @@ function() {
       }
       switch (header.encoding) {
         case 0: // new palette
-        case 1: // new palette, fill with color 0
+        case 1: // new palette, clear to color 0 or 0xff
           newFrame.palette = readPalette(data);
-          if (header.encoding !== 0) {
+          if (header.encoding === 1) {
             newFrame.pix8 = new Uint8Array(newFrame.pix8.length);
+            var clearColor = header.getClearColor(8);
+            if (clearColor !== 0) for (var i = 0; i < newFrame.pix8.length; i++) {
+              newFrame.pix8[i] = clearColor;
+            }
           }
           break;
         case 3:
