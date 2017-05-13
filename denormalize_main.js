@@ -766,7 +766,7 @@ function() {
       }
       return blob.slice(offset, Math.min(offset + FRAME_BLOCK_MAX_SIZE, blob.size))
       .readArrayBuffer().then(function(buffer) {
-        var bytes = new Uint8Array(buffer), pos = 0;
+        var bytes = new Uint8Array(buffer), startPos = 0, pos = 0;
         if (offset === 0) {
           fileHeader = new GDVFileHeader(buffer, 0, GDVFileHeader.byteLength);
           pos += GDVFileHeader.byteLength;
@@ -777,6 +777,7 @@ function() {
           if (!fileHeader.videoIsPresent && !fileHeader.audioIsPresent) {
             return readBlock(blob.size);
           }
+          startPos = pos;
         }
         var audioSize = fileHeader.packedAudioChunkSize;
         do {
@@ -793,7 +794,7 @@ function() {
           if ((pos + audioSize + videoSize) > bytes.length) break;
           pos += audioSize + videoSize;
         } while (pos < bytes.length);
-        var frameBlock = blob.slice(offset, offset + pos);
+        var frameBlock = blob.slice(offset + startPos, offset + pos);
         frameBlocks.push(frameBlock);
         return readBlocksFrom(offset + pos);
       });
