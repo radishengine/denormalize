@@ -211,8 +211,9 @@ function() {
       return !(this.flags & 128);
     },
     getClearColor: function(bitsPerPixel) {
-      if (bitsPerPixel !== 8 || !(this.flags >>> 8)) return 0;
-      return 0xff;
+      return this.flags >>> 24;
+      //if (bitsPerPixel !== 8 || !(this.flags >>> 8)) return 0;
+      //return 0xff;
     },
   };
   GDVFrameHeader.byteLength = 8;
