@@ -679,7 +679,7 @@ function() {
     createAudioSourceFactory: function(destination) {
       var fileHeader = this.fileHeader;
       if (!fileHeader.audioIsPresent) return function(){};
-      var audioContext = destination.audioContext;
+      var audioContext = destination.context;
       var readSamples = this.createSampleReader();
       var copySamples;
       switch (fileHeader.audioBytesPerSample) {
