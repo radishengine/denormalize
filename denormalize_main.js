@@ -467,7 +467,7 @@ function() {
                 length = 2; offset = b;
               }
               if (offset === 0) {
-                var repPixel = (pixPos === 0) ? 0xFF : pixels[pixPos-1];
+                var repPixel = (pixPos === 0) ? header.getClearColor(8) : pixels[pixPos-1];
                 while (length--) pixels[pixPos++] = repPixel;
               }
               else if (++offset > pixPos) {
@@ -501,7 +501,7 @@ function() {
             }
             var length = subtag + 3;
             if (offset === 0xFFF) {
-              var repPixel = (pixPos === 0) ? 0xFF : pixels[pixPos-1];
+              var repPixel = (pixPos === 0) ? header.getClearColor(8) : pixels[pixPos-1];
               while (length--) pixels[pixPos++] = repPixel;
               continue;
             }
@@ -525,7 +525,7 @@ function() {
             var offset = (((firstByte & 0xF) << 8) | data[dataPos++]);
             if (offset === 0xFFF) {
               if (pixPos === 0) {
-                var repPixel = (pixPos === 0) ? 0xFF : pixels[pixPos-1];
+                var repPixel = (pixPos === 0) ? header.getClearColor(8) : pixels[pixPos-1];
                 while (length--) pixels[pixPos++] = repPixel;
                 continue;
               }
@@ -569,7 +569,7 @@ function() {
               offset = (bits3To0 << 8) | nextByte;
             }
             if (offset == 0xFFF) {
-              var repPixel = (pixPos === 0) ? 0xFF : pixels[pixPos-1];
+              var repPixel = (pixPos === 0) ? header.getClearColor(8) : pixels[pixPos-1];
               while (length--) pixels[pixPos++] = repPixel;
               continue;
             }
@@ -621,7 +621,7 @@ function() {
                 var length = (byte_a & 0x0F) + 3;
                 var offset = ((byte_a & 0xF0) << 4) | byte_b;
                 if (offset === 0xFFF) {
-                  var repPixel = (pixPos === 0) ? 0xFF : pixels[pixPos-1];
+                  var repPixel = (pixPos === 0) ? header.getClearColor(8) : pixels[pixPos-1];
                   while (length--) pixels[pixPos++] = repPixel;
                   continue;
                 }
@@ -651,7 +651,7 @@ function() {
                 var byte = data[dataPos++];
                 var offset = byte >> 2, length = (byte & 0x03) + 2;
                 if (offset === 0) {
-                  var repPixel = pixPos === 0 ? 0xFF : pixels[pixPos-1];
+                  var repPixel = pixPos === 0 ? header.getClearColor(8) : pixels[pixPos-1];
                   while (length--) pixels[pixPos++] = repPixel;
                   continue;
                 }
