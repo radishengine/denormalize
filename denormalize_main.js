@@ -759,6 +759,7 @@ function() {
                     } while ((rshift -= 2) >= 0);
                   }
                   newFrame.pix8 = finalizePixels(pixels);
+                  if (header.isShown) redraw();
                   break;
                 case 6:
                 case 8:
