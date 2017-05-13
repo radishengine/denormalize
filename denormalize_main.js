@@ -339,7 +339,7 @@ function() {
     },
     createVideoDisplay: function() {
       if (!this.fileHeader.videoIsPresent) return null;
-      var display = document.createElement('CANVAS'));
+      var display = document.createElement('CANVAS');
       display.width = this.fileHeader.videoWidth;
       display.height = this.fileHeader.videoHeight;
       display.ctx2d = display.getContext('2d');
