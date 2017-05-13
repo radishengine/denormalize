@@ -588,21 +588,7 @@ function() {
       switch (header.encoding) {
         case 0: // new palette
         case 1: // new palette, fill with color 0
-          newFrame.palette = new Uint8Array(256 * 4);
-          for (var i = 0; i < 256; i++) {
-            var r = data[i*3] || 0;
-            var g = data[i*3 + 1] || 0;
-            var b = data[i*3 + 2] || 0;
-            r = (r << 2) | (r >>> 4);
-            g = (g << 2) | (g >>> 4);
-            b = (b << 2) | (b >>> 4);
-            newFrame.palette[i*4] = r;
-            newFrame.palette[i*4 + 1] = g;
-            newFrame.palette[i*4 + 2] = b;
-            newFrame.palette[i*4 + 3] = 0xff;
-          }
-          newFrame.palette = new Uint32Array(
-            newFrame.palette.buffer, newFrame.palette.byteOffset, 256);
+          newFrame.palette = readPalette(data);
           if (header.encoding !== 0) {
             newFrame.pix8 = new Uint8Array(newFrame.pix8.length);
           }
@@ -785,8 +771,8 @@ function() {
           fileHeader = new GDVFileHeader(buffer, 0, GDVFileHeader.byteLength);
           pos += GDVFileHeader.byteLength;
           if (fileHeader.bitsPerPixel === 8) {
-            initialPalette = readPalette(new Uint8Array(buffer, offset, 256 * 3));
-            pos += 256 * 3;
+            initialPalette = readPalette(new Uint8Array(buffer, pos, 256 * 3));
+            pos += initialPalette.byteLength;
           }
           if (!fileHeader.videoIsPresent && !fileHeader.audioIsPresent) {
             return readBlock(blob.size);
