@@ -289,7 +289,7 @@ function() {
     },
     getAudioDataBlob: function() {
       var frameBlocks = this.frameBlocks;
-      if (frameBlocks.length === 0 || !this.frameHeader.audioIsPresent) return null;
+      if (frameBlocks.length === 0 || !this.fileHeader.audioIsPresent) return null;
       var readSamples = this.createSampleReader();
       var self = this;
       var sampleBlobs = [];
