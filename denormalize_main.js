@@ -9,6 +9,7 @@ function() {
   
   var ac = new AudioContext();
   
+  const LITTLE_ENDIAN = (new Uint16Array(new Uint8Array([1, 0]).buffer)[0] === 1);
   const BUFFER_SIZE = 64 * 1024;
   
   Blob.prototype.readBuffered = function(sliceFrom, sliceTo) {
@@ -67,6 +68,38 @@ function() {
       link.click();
     });
   };
+  
+  var dpcmDeltaTable = (function() {
+    var deltaTable = new Int16Array(256);
+    var delta = 0, code = 64, step = 45;
+    for (var i = 1; i < 255; i += 2) {
+      delta += code >>> 5;
+      code += step;
+      step += 2;
+      deltaTable[i] = delta;
+      deltaTable[i+1] = -delta;
+    }
+    deltaTable[255] = delta + (code >>> 5);
+    return deltaTable;
+  })(); 
+  
+  function decodeDPCM(dpcm) {
+    var state = new Int16Array(2);
+    var samples = new Int16Array(dpcm.length);
+    for (var sample_i = 0; sample_i < samples.length; sample_i++) {
+      samples[sample_i] = state[sample_i & 1] += dpcmDeltaTable[dpcm[sample_i]];
+    }
+    samples = new Uint8Array(samples.buffer, samples.byteOffset, samples.byteLength);
+    if (!LITTLE_ENDIAN) {
+      for (var i = 0; i < samples.length; i += 2) {
+        // 16-bit endian swap
+        samples[i] ^= samples[i+1];
+        samples[i+1] ^= samples[i];
+        samples[i] ^= samples[i+1];
+      }
+    }
+    return samples;
+  }  
   
   function GDVFileHeader(buffer, byteOffset, byteLength) {
     this.dv = new DataView(buffer, byteOffset, byteLength);
@@ -130,13 +163,16 @@ function() {
     get frameDataOffset() {
       return (this.bitsPerPixel === 8) ? 24 + 256*3 : 24;
     },
-    get audioChunkSize() {
+    get unpackedAudioChunkSize() {
       var size = Math.floor(this.sampleRate / this.framesPerSecond);
       size *= this.audioChannels;
       size *= this.audioBytesPerSample;
-      if (this.audioIsDPCM) size /= 2;
-      Object.defineProperty(this, 'audioChunkSize', {value:size, enumerable:true});
+      Object.defineProperty(this, 'unpackedAudioChunkSize', {value:size, enumerable:true});
       return size;
+    },
+    get packedAudioChunkSize() {
+      if (this.audioIsDPCM) return this.unpackedAudioChunkSize / this.audioBytesPerSample;
+      return this.unpackedAudioChunkSize;
     },
     get durationString() {
       var seconds = this.frameCount / this.framesPerSecond;
@@ -212,25 +248,64 @@ function() {
       Object.defineProperty(this, 'retrievedPalette', {value:promise, enumerable:true});
       return promise;
     },
-    get retrievedInterleavedFrames() {
+    get retrievedAudioData() {
       var blob = this.blob;
+      var promise = this.retrievedHeader.then(function(header) {
+        if (!header.audioIsPresent) return null;
+        if (!header.videoIsPresent) {
+          blob = blob.slice(header.frameDataOffset, header.frameDataOffset + header.packedAudioChunkSize * header.frameCount);
+          if (!header.audioIsDPCM) return blob;
+          return blob.readAllBytes().then(decodeDPCM).then(function(samples) {
+            return new Blob([samples]);
+          });
+        }
+        return this.retrievedInterleavedFrames.then(function(interleaved) {
+          var audioFrames = new Array(interleaved.length/2);
+          for (var i = 0; i < audioFrames.length; i++) {
+            audioFrames[i] = interleaved[i*2];
+          }
+          return new Blob(audioFrames);
+        });
+      });
+      Object.defineProperty(this, 'retrievedAudioData', {value:promise, enumerable:true});
+      return promise;
+    },
+    get retrievedInterleavedFrames() {
+      var self = this, blob = this.blob;
       var promise = this.retrievedHeader.then(function(header) {
         if (!header.videoIsPresent) {
           if (!header.audioIsPresent) return [];
-          var audioOnly = [];
-          var offset = header.frameDataOffset;
-          for (var i = 0; i < header.frameCount; i++) {
-            audioOnly.push(blob.slice(offset, offset + header.audioChunkSize));
-            offset += header.audioChunkSize;
-          }
-          return audioOnly;
+          return self.retrievedAudioData.then(function(dataBlob) {
+            var audioFrames = [];
+            for (var pos = 0; pos < dataBlob.size; pos += header.unpackedAudioChunkSize) {
+              audioFrames.push(dataBlob.slice(pos, pos + header.unpackedAudioChunkSize));
+            }
+            return audioFrames;
+          });
         }
+        var dpcm = header.audioIsDPCM ? [] : null;
         var list = [];
         function nextPart(frameCount, offset) {
-          if (frameCount === 0) return list;
+          if (frameCount === 0) {
+            if (dpcm) return Promise.all(dpcm).then(function(dpcm) {
+              for (var i = list.length-1; i >= 0; i--) {
+                list.splice(i, 0, dpcm[i]);
+              }
+              return list;
+            });
+            return list;
+          }
           if (header.audioIsPresent) {
-            list.push(blob.slice(offset, offset + header.audioChunkSize));
-            offset += header.audioChunkSize;
+            var audioChunk = blob.slice(offset, offset + header.packedAudioChunkSize);
+            if (dpcm) {
+              dpcm.push(audioChunk.readAllBytes().then(decodeDPCM).then(function(data) {
+                return new Blob([data]);
+              }));
+            }
+            else {
+              list.push(audioChunk);
+            }
+            offset += header.packedAudioChunkSize;
           }
           return blob.readBuffered(offset, offset + 8).then(function(frameHeader) {
             frameHeader = new GDVFrameHeader(frameHeader.buffer, frameHeader.byteOffset, frameHeader.byteLength);
@@ -282,28 +357,10 @@ function() {
     },
     getWav: function() {
       var self = this;
-      var promise = this.retrievedHeader.then(function(header) {
-        if (!header.audioIsPresent) return null;
-        if (!header.videoIsPresent) {
-          var data = [
-            self.blob.slice(
-              header.frameDataOffset,
-              header.frameDataOffset + header.frameCount * header.audioChunkSize)];
-          data.byteLength = data[0].size;
-          return data;
-        }
-        return self.retrievedInterleavedFrames.then(function(interleaved) {
-          var data = new Array(interleaved.length/2);
-          for (var i = 0; i < data.length; i++) {
-            data[i] = interleaved[i*2];
-          }
-          data.byteLength = data.length * header.audioChunkSize;
-          return data;
-        });
-      });
-      
-      promise = Promise.all([this.retrievedHeader, promise])
-      .then(function(values) {
+      var promise = Promise.all([
+        this.retrievedHeader
+        ,this.retrievedAudioData
+      ]).then(function(values) {
         var header = values[0], data = values[1];
         if (!data) return null;
         
@@ -317,27 +374,25 @@ function() {
         fmt.setUint16(18, header.audioBytesPerSample * 8, true);
         
         var fileSize = new DataView(new ArrayBuffer(4));
-        fileSize.setUint32(0, 36 + data.byteLength, true);
+        fileSize.setUint32(0, 36 + data.size, true);
         
         var dataSize = new DataView(new ArrayBuffer(4));
-        dataSize.setUint32(0, data.byteLength, true);
+        dataSize.setUint32(0, data.size, true);
         
-        data.splice(0, 0, 'RIFF', fileSize, 'WAVE', 'fmt ', fmt, 'data', dataSize);
-        
-        return new Blob(data, {type:'audio/wav'});
+        return new Blob(
+          ['RIFF', fileSize, 'WAVE', 'fmt ', fmt, 'data', dataSize, data],
+          {type:'audio/wav'}
+        );
       });
       return promise;
     },
     getAudioBuffer: function(audioContext) {
-      return this.getWav()
-        .then(function(blob) {
-          if (blob) {
-            return blob.readArrayBuffer().then(function(arrayBuffer) {
-              return audioContext.decodeAudioData(arrayBuffer);
-            });
-          }
-          return null;
+      return this.getWav().then(function(blob) {
+        if (!blob) return null;
+        return blob.readArrayBuffer().then(function(arrayBuffer) {
+          return audioContext.decodeAudioData(arrayBuffer);
         });
+      });
     },
   };
   
