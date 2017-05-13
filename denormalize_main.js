@@ -772,7 +772,7 @@ function() {
           pos += GDVFileHeader.byteLength;
           if (fileHeader.bitsPerPixel === 8) {
             initialPalette = readPalette(new Uint8Array(buffer, pos, 256 * 3));
-            pos += initialPalette.byteLength;
+            pos += 256 * 3;
           }
           if (!fileHeader.videoIsPresent && !fileHeader.audioIsPresent) {
             return readBlock(blob.size);
