@@ -247,7 +247,7 @@ function() {
       }
       const state = new Int16Array(2);
       return function(samples) {
-        var dv = new DataView(new AudioBuffer(samples.length * 2));
+        var dv = new DataView(new ArrayBuffer(samples.length * 2));
         for (var i = 0; i < samples.length; i++) {
           dv.setInt16(i*2, state[i&1] += dpcmDeltaTable[samples[i]], true);
         }
