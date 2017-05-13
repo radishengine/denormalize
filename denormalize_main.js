@@ -756,6 +756,8 @@ function() {
       };
       return promise;
     },
+    get audioIsPresent() { return this.fileHeader.audioIsPresent; },
+    get videoIsPresent() { return this.fileHeader.videoIsPresent; },
   };
   GDV.read = function(blob) {
     var fileHeader = null, initialPalette = null, frameBlocks = [];
@@ -871,7 +873,7 @@ function() {
         });
         section.stopButton.disabled = true;
         
-        if (header.audioIsPresent) {
+        if (gdv.audioIsPresent) {
           section.buttons.appendChild(section.downloadWavButton = document.createElement('BUTTON'));
           section.downloadWavButton.innerText = 'Download .WAV';
           section.downloadWavButton.onclick = function() {
