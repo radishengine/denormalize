@@ -714,12 +714,17 @@ function() {
                         if (offset === 0xFFF) {
                           var repPixel = (pixPos === 0) ? 0xFF : pixels[pixPos-1];
                           while (length--) pixels[pixPos++] = repPixel;
+                          continue;
                         }
-                        else {
-                          offset = pixPos - (4096 - offset);
-                          pixels.set(pixels.subarray(offset, offset + length), pixPos);
-                          pixPos += length;
+                        offset = 4096 - offset;
+                        if (offset > pixPos) {
+                          var repPixel = findColorForInvalidOffset(offset - pixPos);
+                          while (length--) pixels[pixPos++] = repPixel;
+                          continue;
                         }
+                        offset = pixPos - offset;
+                        pixels.set(pixels.subarray(offset, offset + length), pixPos);
+                        pixPos += length;
                         continue;
                       case 2:
                         var length = data[dataPos++];
@@ -739,12 +744,17 @@ function() {
                         if (offset === 0) {
                           var repPixel = pixPos === 0 ? 0xFF : pixels[pixPos-1];
                           while (length--) pixels[pixPos++] = repPixel;
+                          continue;
                         }
-                        else {
-                          offset = pixPos - (offset - 1);
-                          pixels.set(pixels.subarray(offset, offset + length), pixPos);
-                          pixPos += length;
+                        offset--;
+                        if (offset > pixPos) {
+                          var repPixel = findColorForInvalidOffset(offset - pixPos);
+                          while (length--) pixels[pixPos++] = repPixel;
+                          continue;
                         }
+                        offset = pixPos - offset;
+                        pixels.set(pixels.subarray(offset, offset + length), pixPos);
+                        pixPos += length;
                         continue;
                     } while ((rshift -= 2) >= 0);
                   }
