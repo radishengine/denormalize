@@ -889,7 +889,7 @@ function() {
           section.downloadWavButton.innerText = 'Download .WAV';
           section.downloadWavButton.onclick = function() {
             section.downloadWavButton.disabled = true;
-            gdv.getWav().then(function(blob) {
+            gdv.getWavBlob().then(function(blob) {
               return blob.download((file.name || 'gdv').replace(/\..*/, '') + '.wav');
             })
             .then(function() {
