@@ -249,7 +249,7 @@ function() {
       return promise;
     },
     get retrievedAudioData() {
-      var blob = this.blob;
+      var self = this, blob = this.blob;
       var promise = this.retrievedHeader.then(function(header) {
         if (!header.audioIsPresent) return null;
         if (!header.videoIsPresent) {
@@ -259,7 +259,7 @@ function() {
             return new Blob([samples]);
           });
         }
-        return this.retrievedInterleavedFrames.then(function(interleaved) {
+        return self.retrievedInterleavedFrames.then(function(interleaved) {
           var audioFrames = new Array(interleaved.length/2);
           for (var i = 0; i < audioFrames.length; i++) {
             audioFrames[i] = interleaved[i*2];
