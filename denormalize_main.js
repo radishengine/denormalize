@@ -676,12 +676,59 @@ function() {
       }
       return newFrame;
     },
+    createAudioSourceFactory: function(destination) {
+      var fileHeader = this.fileHeader;
+      if (!fileHeader.audioIsPresent) return function(){};
+      var audioContext = destination.audioContext;
+      var readSamples = this.createSampleReader();
+      var copySamples;
+      switch (fileHeader.audioBytesPerSample) {
+        case 1:
+          copySamples = function(channels, bytes) {
+            for (var i = 0; i < bytes.length; i++) {
+              channels[i % channels.length][(i / channels.length)|0] = (bytes[i] - 128) / 128;
+            }
+          };
+          break;
+        case 2:
+          if (LITTLE_ENDIAN) copySamples = function(channels, bytes) {
+            var shorts = new Int16Array(bytes.buffer, bytes.byteOffset, bytes.length/2);
+            for (var i = 0; i < shorts.length; i++) {
+              channels[i % channels.length][(i / channels.length)|0] = shorts[i] / 32768;
+            }
+          };
+          else copySamples = function(channels, bytes) {
+            var dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.length);
+            for (var i = 0; i < bytes.length/2; i++) {
+              channels[i % channels.length][(i / channels.length)|0] = dv.getInt16(i*2, true) / 32768;
+            }
+          };
+          break;
+        default: throw new Error('unsupported format');
+      }
+      return function(samples, time) {
+        samples = readSamples(samples);
+        var abuffer = audioContext.createBuffer(
+          fileHeader.audioChannels,
+          samples.length / (fileHeader.audioChannels * fileHeader.audioBytesPerSample),
+          fileHeader.sampleRate);
+        var channels = new Array(fileHeader.audioChannels);
+        for (var i = 0; i < channels.length; i++) {
+          channels[i] = abuffer.getChannelData(i);
+        }
+        copySamples(channels, samples);
+        var asource = audioContext.createBufferSource();
+        asource.buffer = abuffer;
+        asource.connect(destination);
+        asource.start(time);
+      };
+    },
     play: function(audioContext, display) {
       var destination = audioContext.createGain();
       destination.connect(audioContext.destination);
       var frameBlocks = this.frameBlocks;
       if (frameBlocks.length === 0) return Promise.resolve('complete');
-      var readSamples = this.createSampleReader();
+      var audioSource = this.createAudioSourceFactory(destination);
       var self = this;
       var frameQueue = [];
       var frame = display.initialFrame;
@@ -703,11 +750,9 @@ function() {
       function doBlock(next_i, startTime, buffer) {
         var time = startTime;
         var readingNext = (next_i < frameBlocks.length) ? self.readBlock(next_i) : null;
-        var samples = [];
         self.eachFrameInBlockBuffer(buffer, function(audioChunk, videoHeader, videoData) {
           frameQueue.push(frame = self.decode(frame, videoHeader, videoData));
           frame.time = time;
-          time += frameSeconds;
           if (videoHeader.isShown) {
             frame.imageData = display.ctx2d.createImageData(display.width, display.height);
             var pix32 = new Uint32Array(
@@ -719,10 +764,11 @@ function() {
               pix32[i] = palette[pix8[i]];
             }
           }
-          samples.push(readSamples(audioChunk));
+          audioSource(audioChunk, time);
+          time += frameSeconds;
         });
         if (readingNext) {
-          var scheduleNext = startTime - ac.currentTime;
+          var scheduleNext = startTime - audioContext.currentTime;
           if (scheduleNext <= 0) {
             return readingNext.then(doBlock.bind(null, next_i+1, time));
           }
