@@ -107,7 +107,7 @@ function() {
             in_i += length;
             continue decoding;
           case 0x4:
-            length = 3 + (b & 0x3F);
+            length = 3 + (b & 0xF);
             if (out_i < 2) {
               return Promise.reject('invalid MGL: 2-byte pattern too early');
             }
@@ -123,7 +123,7 @@ function() {
             } while (--length);
             continue decoding;
           case 0x5:
-            length = 2 + (b & 0x4F);
+            length = 2 + (b & 0xF);
             if (out_i < 4) {
               return Promise.reject('invalid MGL: 2-word pattern too early');
             }
@@ -202,7 +202,11 @@ function() {
         }
       }
       buf = buf.subarray(0, out_i);
-      return new Blob([buf]);
+      var type = '';
+      if (String.fromCharCode.apply(null, buf.slice(0, 6)) === 'DASP\x00\x06') {
+        type = 'application/x-das';
+      }
+      return new Blob([buf], {type:type});
     });
   }
   
@@ -994,6 +998,42 @@ function() {
       });
     }
     return readBlocksFrom(0);
+  };
+  
+  function DASFileHeader(buffer, byteOffset, byteLength) {
+    this.bytes = new Uint8Array(buffer, byteOffset, byteLength);
+    this.dv = new DataView(buffer, byteOffset, byteLength);
+  }
+  DASFileHeader.prototype = {
+    get signature() {
+      return String.fromCharCode.apply(null, this.bytes.subarray(0, 6));
+    },
+    get hasValidSignature() {
+      return this.signature === 'DASP\x05\x00';
+    },
+    // uint16_t unknown_1;     // 0x8000-0x8600 ?
+    // uint32_t always_0x28;
+    get paletteOffset() {
+      return this.dv.getUint32(12, true);
+    },
+    // uint32_t unknown_3;
+    get namesOffset() {
+      return this.dv.getUint32(20, true);
+    },
+    // uint32_t unknown_4;
+    // uint32_t unknown_5;
+    // uint32_t unknown_6;
+  };
+  DASFileHeader.byteLength = 36;
+  
+  function DAS() {
+  }
+  DAS.read = function(blob) {
+    var fileHeader;
+    return blob.slice(0, DASFileHeader.byteLength)
+    .readArrayBuffer().then(function(ab) {
+      fileHeader = new DASFileHeader(ab, 0, ab.byteLength);
+    });
   };
   
   console.log('hello... newman world');
