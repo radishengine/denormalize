@@ -1059,10 +1059,9 @@ function() {
       var list = new Array(this.textureCount + this.spriteCount);
       var buffer = this.dv.buffer, byteOffset = this.dv.byteOffset + 4, byteLength = this.dv.byteLength - 4;
       for (var i = 0; i < list.length; i++) {
-        var record = new DASNameRecord(buffer, byteOffset, byteLength);
+        var record = list[i] = new DASNameRecord(buffer, byteOffset, byteLength);
         byteOffset += record.byteLength;
         byteLength -= record.byteLength;
-        list.push(record);
       }
       Object.defineProperty(this, 'records', {value:list, enumerable:true});
       return list;
