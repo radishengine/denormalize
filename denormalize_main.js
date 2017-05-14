@@ -126,12 +126,12 @@ function() {
           case 0x6:
             offset = 1;
             length = 1;
-            reps = 3 + (b & 0x5F);
+            reps = 3 + (b & 0xF);
             break;
           case 0x7:
             offset = 2;
             length = 2;
-            reps = 2 + (b & 0x6F);
+            reps = 2 + (b & 0xF);
             break;
           case 0x8: case 0x9: case 0xA: case 0xB:
             offset = 3 + (b & 0x3F);
@@ -144,7 +144,7 @@ function() {
             reps = 1;
             break;
           case 0xE: case 0xF:
-            offset = 3 + (((b & 0xDF) << 8) | bytes[in_i++]);
+            offset = 3 + (((b & 0x1F) << 8) | bytes[in_i++]);
             length = 5 + bytes[in_i++];
             reps = 1;
             break;
