@@ -1361,8 +1361,11 @@ function() {
     }
     else if (/\.das$/i.test(file.name)) {
       DAS.read(file).then(function(das) {
-        das.nameSection.records.forEach(function(record) {
-          console.log(record);
+        das.retrievedSpriteInfo.then(function(spriteInfo) {
+          console.log(spriteInfo);
+        });
+        das.retrievedTextureInfo.then(function(textureInfo) {
+          console.log(textureInfo);
         });
       });
     }
