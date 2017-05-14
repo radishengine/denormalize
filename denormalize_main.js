@@ -1043,6 +1043,16 @@ function() {
         
       });
     }
+    else if (/\.mgl$/i.test(file.name)) {
+      deMGL(file).then(
+        function(file2) {
+          console.log(file2);
+        },
+        function(msg) {
+          section.classList.add('error');
+          section.innerText = msg;
+        });
+    }
     else {
       section.innerText = 'unknown: ' + file.name;
     }
