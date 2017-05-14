@@ -1026,13 +1026,67 @@ function() {
   };
   DASFileHeader.byteLength = 36;
   
-  function DAS() {
+  function DASNameRecord(buffer, byteOffset, byteLength) {
+    var dv = new DataView(buffer, byteOffset, byteLength);
+    this.unknown1 = dv.getUint16(0, true);
+    if ((this.index = dv.getUint16(2, true)) & 0x8000) {
+      this.kind = 'sprite';
+      this.index &= 0x7FFF;
+    }
+    else this.kind = 'texture';
+    var bytes = new Uint8Array(buffer, byteOffset, byteLength);
+    var offset = 4;
+    var startOffset = offset;
+    while (bytes[offset] !== 0) offset++;
+    this.shortName = String.fromCharCode.apply(null, bytes.subarray(startOffset, offset));
+    offset = startOffset = offset + 1;
+    while (bytes[offset] !== 0) offset++;
+    this.longName = String.fromCharCode.apply(null, bytes.subarray(startOffset, offset));
+    this.byteLength = ++offset;
+  }
+  
+  function DASNamesSection(buffer, byteOffset, byteLength) {
+    this.dv = new DataView(buffer, byteOffset, byteLength);
+  }
+  DASNamesSection.prototype = {
+    get textureCount() {
+      return this.dv.getUint16(0, true);
+    },
+    get spriteCount() {
+      return this.dv.getUint16(2, true);
+    },
+    get records() {
+      var list = new Array(this.textureCount + this.spriteCount);
+      var buffer = this.dv.buffer, byteOffset = this.dv.byteOffset + 4, byteLength = this.dv.byteLength - 4;
+      for (var i = 0; i < list.length; i++) {
+        var record = new DASNameRecord(buffer, byteOffset, byteLength);
+        byteOffset += record.byteLength;
+        byteLength -= record.byteLength;
+        list.push(record);
+      }
+      Object.defineProperty(this, 'records', {value:list, enumerable:true});
+      return list;
+    },
+  };
+  
+  function DAS(fileHeader, nameSection) {
+    this.fileHeader = fileHeader;
+    this.nameSection = nameSection;
   }
   DAS.read = function(blob) {
     var fileHeader;
     return blob.slice(0, DASFileHeader.byteLength)
     .readArrayBuffer().then(function(ab) {
       fileHeader = new DASFileHeader(ab, 0, ab.byteLength);
+      var gotNameSection = blob.slice(fileHeader.namesOffset)
+        .readArrayBuffer().then(function(ab) {
+          return new DASNamesSection(ab, 0, ab.byteLength);
+        });
+      Promise.all([gotNameSection])
+      .then(function(values) {
+        var nameSection = values[0];
+        return new DAS(fileHeader, nameSection);
+      });
     });
   };
   
@@ -1124,12 +1178,25 @@ function() {
     else if (/\.mgl$/i.test(file.name)) {
       deMGL(file).then(
         function(file2) {
-          console.log(file2);
+          if (file2.type === 'application/x-das') {
+            file2.name = file.name.replace(/\..*$/, '.DAS');
+            onfile(file2);
+          }
+          else {
+            console.log(file2);
+          }
         },
         function(msg) {
           section.classList.add('error');
           section.innerText = msg;
         });
+    }
+    else if (/\.das$/i.test(file.name)) {
+      DAS.read(file).then(function(das) {
+        das.nameSection.records.forEach(function(record) {
+          console.log(record);
+        });
+      });
     }
     else {
       section.innerText = 'unknown: ' + file.name;
