@@ -1150,6 +1150,34 @@ function() {
     this.nameSection = nameSection;
   }
   DAS.prototype = {
+    retrieveInfo: function(kind, baseOffset) {
+      var records = this.nameSection.records.filter(function(record) {
+        return record.kind === kind;
+      });
+      var maxIndex = records.reduce(function(accumulator, record) {
+        return Math.max(accumulator, record.index);
+      }, 0);
+      return this.blob.readBuffered(baseOffset, baseOffset + 8 * (maxIndex + 1))
+      .then(function(bytes) {
+        var dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+        return records.map(function(record) {
+          return Object.assign({
+            offset: dv.getUint32(record.index*8, true),
+            unknown: dv.getUint32(record.index*8 + 4, true),
+          }, record);
+        });
+      });
+    },
+    get retrievedSpriteInfo() {
+      var info = this.retrieveInfo('sprite', this.fileHeader.spriteRecordsOffset);
+      Object.defineProperty(this, 'retrievedSpriteInfo', {value:info, enumerable:true});
+      return info;
+    },
+    get retrievedTextureInfo() {
+      var info = this.retrieveInfo('texture', this.fileHeader.textureRecordsOffset);
+      Object.defineProperty(this, 'retrievedTextureInfo', {value:info, enumerable:true});
+      return info;
+    },
     /*
     getPalette: function() {
       function loadImageBlock(block) {
