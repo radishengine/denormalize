@@ -203,7 +203,7 @@ function() {
       }
       buf = buf.subarray(0, out_i);
       var type = '';
-      if (String.fromCharCode.apply(null, buf.slice(0, 6)) === 'DASP\x00\x06') {
+      if (String.fromCharCode.apply(null, buf.slice(0, 6)) === 'DASP\x05\x00') {
         type = 'application/x-das';
       }
       return new Blob([buf], {type:type});
