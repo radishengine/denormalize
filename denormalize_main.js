@@ -1082,7 +1082,7 @@ function() {
         .readArrayBuffer().then(function(ab) {
           return new DASNamesSection(ab, 0, ab.byteLength);
         });
-      Promise.all([gotNameSection])
+      return Promise.all([gotNameSection])
       .then(function(values) {
         var nameSection = values[0];
         return new DAS(fileHeader, nameSection);
