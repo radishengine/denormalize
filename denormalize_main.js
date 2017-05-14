@@ -134,7 +134,7 @@ function() {
             reps = 2 + (b & 0x6F);
             break;
           case 0x8: case 0x9: case 0xA: case 0xB:
-            offset = 3 + (b & 0x3F) + 3;
+            offset = 3 + (b & 0x3F);
             length = 3;
             reps = 1;
             break;
@@ -155,7 +155,20 @@ function() {
         }
         offset = out_i - offset;
         if ((offset+length) > out_i) {
-          return Promise.reject('invalid MGL: cannot copy more than available bytes');
+          var copy = buf.subarray(offset, out_i);
+          do {
+            var repLength = length;
+            do {
+              buf.set(copy, out_i);
+              out_i += copy.length;
+              repLength -= copy.length;
+            } while (repLength >= copy.length);
+            if (repLength > 0) {
+              buf.set(copy.subarray(0, repLength), out_i);
+              out_i += repLength;
+            }
+          } while (--reps);
+          continue;
         }
         var copy = buf.subarray(offset, offset + length);
         do {
