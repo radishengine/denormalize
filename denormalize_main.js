@@ -1011,8 +1011,13 @@ function() {
     get hasValidSignature() {
       return this.signature === 'DASP\x05\x00';
     },
-    // uint16_t unknown_1;     // 0x8000-0x8600 ?
-    // uint32_t always_0x28;
+    get spriteRecordsOffset() {
+      return this.dv.getUint16(6, true);
+    },
+    get textureRecordsOffset() {
+      return this.dv.getUint16(8, true);
+    },
+    // uint16_t always_0x00
     get paletteOffset() {
       return this.dv.getUint32(12, true);
     },
@@ -1066,25 +1071,161 @@ function() {
       Object.defineProperty(this, 'records', {value:list, enumerable:true});
       return list;
     },
+    get textureRecords() {
+      var list = this.records.filter(function(record) { return record.kind === 'texture'; });
+      Object.defineProperty(this, 'textureRecords', {value:list, enumerable:true});
+      return list;
+    },
+    get spriteRecords() {
+      var list = this.records.filter(function(record) { return record.kind === 'sprite'; });
+      Object.defineProperty(this, 'spriteRecords', {value:list, enumerable:true});
+      return list;
+    },
   };
   
-  function DAS(fileHeader, nameSection) {
+  function DASAnimation(buffer, byteOffset, byteLength) {
+    this.dv = new DataView(buffer, byteOffset, byteLength);
+  }
+  DASAnimation.prototype = {
+    get unknown1() {
+      return this.dv.getUint32(0, true);
+    },
+    get byteLength() {
+      return this.dv.getUint16(4, true);
+    },
+    get unknown2() {
+      return this.dv.getUint16(6, true);
+    },
+    // 3 bytes always 0xFFFFFF
+    get speed() {
+      return this.dv.getUint8(11, true);
+    },
+    get deltaOffsets() {
+      var list = new Array((this.byteLength - 20)/4);
+      for (var i = 0; i < list.length; i++) {
+        list[i] = this.dv.getUint32(12 + i*4, true);
+        if (list[i] !== 0) list[i] += 4;
+      }
+      Object.defineProperty(this, 'deltaOffsets', {value:list, enumerable:true});
+      return list;
+    },
+    get unknown3() {
+      return this.dv.getUint32(this.byteLength - 8, true);
+    },
+    get unknown4() {
+      return this.dv.getUint32(this.byteLength - 4, true);
+    },
+  };
+  
+  function DASImageHeader(buffer, byteOffset, byteLength) {
+    this.dv = new DataView(buffer, byteOffset, byteLength);
+  }
+  DASImageHeader.prototype = {
+    get flags() {
+      return this.dv.getUint16(0, true);
+    },
+    get isAnimated() {
+      return !!(this.flags & 0x100);
+    },
+    get width() {
+      return this.dv.getUint16(2, true);
+    },
+    get height() {
+      return this.dv.getUint16(4, true);
+    },
+    get animation() {
+      if (!this.isAnimated) return null;
+      var anim = new DASAnimation(this.dv.buffer, this.dv.byteOffset + 6, this.dv.byteLength - 6);
+      Object.defineProperty(this, 'animation', {value:anim, enumerable:true});
+      return anim;
+    },
+    get byteLength() {
+      return 6 + this.isAnimated ? this.animation.byteLength : 0;
+    },
+  };
+  
+  function DAS(blob, fileHeader, nameSection) {
+    this.blob = blob;
     this.fileHeader = fileHeader;
     this.nameSection = nameSection;
   }
+  DAS.prototype = {
+    /*
+    getPalette: function() {
+      function loadImageBlock(block) {
+        var dv = new DataView(block.buffer, block.byteOffset, block.byteLength);
+        var list = new Array(block.byteLength/8);
+        for (var i = 0; i < list.length; i++) {
+          list[i] = {
+            offset: dv.getUint32(i*8, true),
+            unknown: dv.getUint32(i*8 + 4, true),
+          };
+          if (list[i].offset === 0) list[i] = null;
+        }
+        return list;
+      }
+      function readImage(values) {
+        var info = values[1], data = values[2];
+      }
+      var nameSection = this.nameSection;
+      var maxTextureIndex = 0, maxSpriteIndex = 0;
+      nameSection.records.forEach(function(record) {
+        switch (record.kind) {
+          case 'texture':
+            maxTextureIndex = Math.max(maxTextureIndex, record.index);
+            break;
+          case 'sprite':
+            maxSpriteIndex = Math.max(maxSpriteIndex, record.index);
+            break;
+        }
+      });
+      var readTextureBlock = blob.readBuffered(
+        fileHeader.textureRecordsOffset,
+        fileHeader.textureRecordsOffset + 8 + 8 * maxTextureIndex);
+      var readSpriteBlock = blob.readBuffered(
+        fileHeader.spriteRecordsOffset,
+        fileHeader.spriteRecordsOffset + 8 + 8 * maxSpriteIndex);
+      return Promise.all([
+        readTextureBlock.then(loadImageBlock),
+        readSpriteBlock.then(loadImageBlock),
+      ]);
+    })
+    .then(function(values) {
+      var textures = values[0], sprites = values[1];
+      var combo = [];
+      for (var i = 0; i < textures.length; i++) {
+        if (!textures[i]) continue;
+        combo.push({kind:'texture', index:i, offset:textures[i].offset});
+      }
+      for (var i = 0; i < sprites.length; i++) {
+        if (!sprites[i]) continue;
+        combo.push({kind:'sprite', index:i, offset:sprites[i].offset});
+      }
+      combo.sort(function(a,b) { return a.offset - b.offset; });
+      var slices = new Array(combo.length);
+      for (var i = 0; i < slices.length-1; i++) {
+        slices[i] = Promise.all([
+          combo[i],
+          blob.readBuffered(combo[i].offset, combo[i+1].offset),
+        ]).then(readImage);
+      }
+      slices[i] = Promise.all([
+        combo[i],
+        blob.readBuffered(combo[i].offset, blob.size),
+      ]).then(readImage);
+      return Promise.all(slices);
+    },
+    */
+  };
   DAS.read = function(blob) {
     var fileHeader;
-    return blob.slice(0, DASFileHeader.byteLength)
-    .readArrayBuffer().then(function(ab) {
-      fileHeader = new DASFileHeader(ab, 0, ab.byteLength);
-      var gotNameSection = blob.slice(fileHeader.namesOffset)
-        .readArrayBuffer().then(function(ab) {
-          return new DASNamesSection(ab, 0, ab.byteLength);
-        });
-      return Promise.all([gotNameSection])
-      .then(function(values) {
-        var nameSection = values[0];
-        return new DAS(fileHeader, nameSection);
+    return blob.slice(0, DASFileHeader.byteLength).readAllBytes().then(function(headerBytes) {
+      fileHeader = new DASFileHeader(headerBytes.buffer, headerBytes.byteOffset, headerBytes.byteLength);
+      return blob.slice(fileHeader.namesOffset).readArrayBuffer().then(function(ab) {
+        return new DAS(
+          blob.slice(0, headerBytes.namesOffset),
+          fileHeader,
+          new DASNamesSection(ab, 0, ab.byteLength));
       });
     });
   };
