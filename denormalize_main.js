@@ -1029,9 +1029,9 @@ function() {
   function DASNameRecord(buffer, byteOffset, byteLength) {
     var dv = new DataView(buffer, byteOffset, byteLength);
     this.unknown1 = dv.getUint16(0, true);
-    if ((this.index = dv.getUint16(2, true)) & 0x8000) {
+    if ((this.index = dv.getUint16(2, true)) & 0x4000) {
       this.kind = 'sprite';
-      this.index &= 0x7FFF;
+      this.index &= 0x3FFF;
     }
     else this.kind = 'texture';
     var bytes = new Uint8Array(buffer, byteOffset, byteLength);
