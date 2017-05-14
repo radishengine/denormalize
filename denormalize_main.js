@@ -81,6 +81,12 @@ function() {
         newBuf.set(buf);
         buf = newBuf;
       }
+      function allZero(bytes, i, j) {
+        for (; i < j; i++) {
+          if (bytes[i] !== 0) return false;
+        }
+        return true;
+      }
       decoding: while (in_i < buf.length) {
         var b = bytes[in_i++];
         var offset, length, reps;
@@ -94,7 +100,9 @@ function() {
               return Promise.reject('invalid MGL: not enough input');
             }
             ensure(length);
-            buf.set(bytes.subarray(in_i, in_i + length), out_i);
+            if (!allZero(bytes, in_i, in_i + length)) {
+              buf.set(bytes.subarray(in_i, in_i + length), out_i);
+            }
             out_i += length;
             in_i += length;
             continue decoding;
@@ -104,9 +112,13 @@ function() {
               return Promise.reject('invalid MGL: 2-byte pattern too early');
             }
             ensure(length);
-            var inc = buf[out_i-1] - buf[out_i-2];
-            do {
-              buf[out_i] = buf[out_i-1] + inc;
+            var state = buf[out_i-1];
+            var inc = state - buf[out_i-2];
+            if (state === 0 && inc === 0) {
+              out_i += length;
+            }
+            else do {
+              buf[out_i] = state += inc;
               out_i++;
             } while (--length);
             continue decoding;
@@ -117,8 +129,12 @@ function() {
             }
             ensure(length*2);
             var dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
-            var inc = dv.getUint16(out_i-2, true) - dv.getUint16(out_i-4, true);
-            do {
+            var state = dv.getUint16(out_i-2, true);
+            var inc = state - dv.getUint16(out_i-4, true);
+            if (state === 0 && inc === 0) {
+              out_i += 2 * length;
+            }
+            else do {
               dv.setUint16(out_i, dv.getUint16(out_i - 2, true) + inc, true);
               out_i += 2;
             } while (--length);
@@ -155,6 +171,10 @@ function() {
         }
         offset = out_i - offset;
         if ((offset+length) > out_i) {
+          if (allZero(buf, offset, out_i)) {
+            out_i += length * reps;
+            continue;
+          }
           var copy = buf.subarray(offset, out_i);
           do {
             var repLength = length;
@@ -168,13 +188,18 @@ function() {
               out_i += repLength;
             }
           } while (--reps);
-          continue;
         }
-        var copy = buf.subarray(offset, offset + length);
-        do {
-          buf.set(copy, out_i);
-          out_i += length;
-        } while (--reps);
+        else {
+          if (allZero(buf, offset, offset + length)) {
+            out_i += length * reps;
+            continue decoding;
+          }
+          var copy = buf.subarray(offset, offset + length);
+          do {
+            buf.set(copy, out_i);
+            out_i += length;
+          } while (--reps);
+        }
       }
       buf = buf.subarray(0, out_i);
       return new Blob([buf]);
