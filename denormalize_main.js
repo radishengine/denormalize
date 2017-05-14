@@ -1144,6 +1144,13 @@ function() {
     },
   };
   
+  function DASImage(das, nameRecord, offset, unknown) {
+    this.das = das;
+    this.nameRecord = nameRecord;
+    this.offset = offset;
+    this.unknown = unknown;
+  }
+  
   function DAS(blob, fileHeader, nameSection) {
     this.blob = blob;
     this.fileHeader = fileHeader;
@@ -1151,6 +1158,7 @@ function() {
   }
   DAS.prototype = {
     retrieveInfo: function(kind, baseOffset) {
+      var self = this;
       var records = this.nameSection.records.filter(function(record) {
         return record.kind === kind;
       });
@@ -1161,10 +1169,9 @@ function() {
       .then(function(bytes) {
         var dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
         return records.map(function(record) {
-          return Object.assign({
-            offset: dv.getUint32(record.index*8, true),
-            unknown: dv.getUint32(record.index*8 + 4, true),
-          }, record);
+          return new DASImage(self, record,
+            dv.getUint32(record.index*8, true),
+            dv.getUint32(record.index*8 + 4, true));
         });
       });
     },
