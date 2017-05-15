@@ -1367,11 +1367,19 @@ function() {
         });
     }
     else if (/\.das$/i.test(file.name)) {
+      section.appendChild(section.sprites = document.createElement('DIV'));
+      section.sprites.style.display = 'flex';
+      section.sprites.style.flexFlow = 'row wrap';
       DAS.read(file).then(function(das) {
         das.retrievedSpriteInfo.then(function(spriteInfo) {
           console.log(spriteInfo);
         });
         das.retrievedTextureInfo.then(function(textureInfo) {
+          var textureElement = document.createElement('DIV');
+          textureElement.style.background = 'hsv(' + (1 + Math.floor(Math.random() * 359))) + ', 80%, 70%)';
+          textureElement.style.width = (50 + Math.floor(Math.random() * 200)) + 'px';
+          textureElement.style.height = (50 + Math.floor(Math.random() * 200)) + 'px';
+          section.sprites.appendChild(textureElement);
           console.log(textureInfo);
         });
       });
