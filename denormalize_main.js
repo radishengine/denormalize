@@ -1198,20 +1198,20 @@ function() {
     this.blob = blob;
     this.fileHeader = fileHeader;
     
-    var imageInfo = this.imageInfo = [];
-    var imageInfoByIndex = this.imageInfoByIndex = {};
+    var imageRecords = this.imageRecords = [];
+    var imageRecordsByIndex = this.imageRecordsByIndex = {};
     nameSection.records.forEach(function(record) {
       var offset = imageRecords[record.index*2];
       if (!offset) return;
-      imageInfo.push(imageInfoByIndex[record.index] = new DASImage(
+      imageRecords.push(imageRecordsByIndex[record.index] = new DASImage(
         record,
         offset,
         imageRecords[record.index*2 + 1]));
     });
     for (var i = 0; i < imageRecords.length/2; i++) {
       var offset = imageRecords[i*2];
-      if (offset && !(i in imageInfoByIndex)) {
-        imageInfo.push(imageInfoByIndex[i] = new DASImage(
+      if (offset && !(i in imageRecordsByIndex)) {
+        imageRecords.push(imageRecordsByIndex[i] = new DASImage(
           {shortName:'', longName:''},
           offset,
           imageRecords[i*2 + 1]));
