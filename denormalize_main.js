@@ -1174,7 +1174,7 @@ function() {
     },
     getFirstFrame: function() {
       var self = this, blob = this.blob;
-      var palette = this.kind === 'sprite' ? this.das.transparentPalette : this.das.opaquePalette;
+      var palette = this.das.transparentPalette; // this.kind === 'sprite' ? this.das.transparentPalette : this.das.opaquePalette;
       return this.retrievedHeader.then(function(header) {
         return blob.readBuffered(
           self.offset + header.byteLength,
