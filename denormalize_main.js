@@ -1447,8 +1447,10 @@ function() {
         el.dataset.shortName = image.nameRecord.shortName;
         el.dataset.longName = image.nameRecord.longName;
         el.setAttribute('title', [
-          image.nameRecord.kind.slice(0,1).toUpperCase() + image.nameRecord.kind.slice(1) + ' ' + image.index,
-          el.dataset.shortName,
+          image.nameRecord.kind.slice(0,1).toUpperCase()
+          + image.nameRecord.kind.slice(1)
+          + ' ' + image.nameRecord.index
+          + ': ' + el.dataset.shortName,
           el.dataset.longName,
         ].join('\n'));
         el.style.background = 'hsl(' + Math.random()*360 + ', 80%, 70%)';
