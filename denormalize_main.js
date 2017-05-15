@@ -1194,27 +1194,27 @@ function() {
     },
   };
   
-  function DAS(blob, fileHeader, imageRecords, nameSection) {
+  function DAS(blob, fileHeader, offsetRecords, nameSection) {
     this.blob = blob;
     this.fileHeader = fileHeader;
     
     var imageRecords = this.imageRecords = [];
     var imageRecordsByIndex = this.imageRecordsByIndex = {};
     nameSection.records.forEach(function(record) {
-      var offset = imageRecords[record.index*2];
+      var offset = offsetRecords[record.index*2];
       if (!offset) return;
       imageRecords.push(imageRecordsByIndex[record.index] = new DASImage(
         record,
         offset,
-        imageRecords[record.index*2 + 1]));
+        offsetRecords[record.index*2 + 1]));
     });
     for (var i = 0; i < imageRecords.length/2; i++) {
-      var offset = imageRecords[i*2];
+      var offset = offsetRecords[i*2];
       if (offset && !(i in imageRecordsByIndex)) {
         imageRecords.push(imageRecordsByIndex[i] = new DASImage(
           {shortName:'', longName:''},
           offset,
-          imageRecords[i*2 + 1]));
+          offsetRecords[i*2 + 1]));
       }
     }
     imageRecords.sort(function(a, b) {
