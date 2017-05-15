@@ -1012,11 +1012,11 @@ function() {
     get hasValidSignature() {
       return this.signature === 'DASP\x05\x00';
     },
-    get spriteRecordsOffset() {
-      return this.dv.getUint16(6, true);
-    },
     get textureRecordsOffset() {
       return this.dv.getUint16(8, true);
+    },
+    get spriteRecordsOffset() {
+      return this.textureRecordsOffset + 0x1000 * 8;
     },
     // uint16_t always_0x00
     get paletteOffset() {
@@ -1205,7 +1205,7 @@ function() {
       });
     },
     get retrievedSpriteInfo() {
-      var info = this.retrieveInfo('sprite', this.fileHeader.spriteRecordsOffset - 8);
+      var info = this.retrieveInfo('sprite', this.fileHeader.spriteRecordsOffset);
       Object.defineProperty(this, 'retrievedSpriteInfo', {value:info, enumerable:true});
       return info;
     },
