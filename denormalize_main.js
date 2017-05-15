@@ -1049,11 +1049,6 @@ function() {
   function DASNameRecord(buffer, byteOffset, byteLength) {
     var dv = new DataView(buffer, byteOffset, byteLength);
     this.unknown1 = dv.getUint16(0, true);
-    if ((this.index = dv.getUint16(2, true)) & 0x1000) {
-      this.kind = 'sprite';
-      this.index &= 0xFFF;
-    }
-    else this.kind = 'texture';
     var bytes = new Uint8Array(buffer, byteOffset, byteLength);
     var offset = 4;
     var startOffset = offset;
@@ -1084,16 +1079,6 @@ function() {
         byteLength -= record.byteLength;
       }
       Object.defineProperty(this, 'records', {value:list, enumerable:true});
-      return list;
-    },
-    get textureRecords() {
-      var list = this.records.filter(function(record) { return record.kind === 'texture'; });
-      Object.defineProperty(this, 'textureRecords', {value:list, enumerable:true});
-      return list;
-    },
-    get spriteRecords() {
-      var list = this.records.filter(function(record) { return record.kind === 'sprite'; });
-      Object.defineProperty(this, 'spriteRecords', {value:list, enumerable:true});
       return list;
     },
   };
@@ -1165,11 +1150,13 @@ function() {
     this.nameRecord = nameRecord;
     this.offset = offset;
     this.unknown = unknown;
-    this.index = nameRecord.index;
   }
   DASImage.prototype = {
     get kind() {
-      return (this.index >= 0x1000) ? 'sprite' : 'texture';
+      return (this.nameRecord.index >= 0x1000) ? 'sprite' : 'texture';
+    },
+    get index() {
+      return (this.nameRecord.index & 0xfff);
     },
     get retrievedHeader() {
       var self = this, blob = this.blob, header;
@@ -1488,9 +1475,9 @@ function() {
           el.dataset.shortName = image.nameRecord.shortName;
           el.dataset.longName = image.nameRecord.longName;
           el.setAttribute('title', [
-            image.nameRecord.kind.slice(0,1).toUpperCase()
-            + image.nameRecord.kind.slice(1)
-            + ' ' + image.nameRecord.index
+            image.kind.slice(0,1).toUpperCase()
+            + image.kind.slice(1)
+            + ' ' + image.index
             + ': ' + el.dataset.shortName,
             el.dataset.longName,
           ].join('\n'));
