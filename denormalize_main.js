@@ -1407,11 +1407,16 @@ function() {
         das.retrievedTextureInfo.then(function(textureInfo) {
           textureInfo.forEach(function(image) {
             var textureElement = document.createElement('DIV');
+            textureElement.dataset.index = textureInfo.index;
+            textureElement.dataset.shortName = textureInfo.shortName;
+            textureElement.dataset.longName = textureInfo.longName;
+            textureElement.setAttribute('alt', textureInfo.shortName + '\n' + textureInfo.longName);
             textureElement.style.background = 'hsl(' + (1 + Math.floor(Math.random() * 359)) + ', 80%, 70%)';
             section.sprites.appendChild(textureElement);
             image.retrievedHeader.then(function(header) {
               textureElement.style.width = header.width + 'px';
               textureElement.style.height = header.height + 'px';
+              textureElement.style.order = header.height;
             });
           });
         });
