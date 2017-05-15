@@ -1174,7 +1174,7 @@ function() {
     },
     getFirstFrame: function() {
       var self = this, blob = this.blob;
-      var palette = this.das.palette;
+      var palette = this.kind === 'sprite' ? this.das.transparentPalette : this.das.opaquePalette;
       return this.retrievedHeader.then(function(header) {
         return blob.readBuffered(
           self.offset + header.byteLength,
@@ -1194,7 +1194,9 @@ function() {
   function DAS(blob, fileHeader, offsetRecords, palette, nameSection) {
     this.blob = blob;
     this.fileHeader = fileHeader;
-    this.palette = palette;
+    this.opaquePalette = palette;
+    this.transparentPalette = new Uint32Array(palette);
+    this.transparentPalette[0] = 0;
     
     var imageRecords = this.imageRecords = [];
     var imageRecordsByIndex = this.imageRecordsByIndex = {};
