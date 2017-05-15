@@ -13,6 +13,7 @@ function() {
   const BUFFER_SIZE = 64 * 1024;
   
   Blob.prototype.readBuffered = function(sliceFrom, sliceTo) {
+    if (sliceTo < sliceFrom) throw new RangeError('sliceTo < sliceFrom');
     var buf = this.buffer;
     if (buf && sliceFrom >= buf.bufferOffset && sliceTo <= (buf.bufferOffset + buf.byteLength)) {
       return Promise.resolve(new Uint8Array(buf, sliceFrom - buf.bufferOffset, sliceTo - sliceFrom));
