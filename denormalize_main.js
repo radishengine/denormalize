@@ -1049,6 +1049,7 @@ function() {
   function DASNameRecord(buffer, byteOffset, byteLength) {
     var dv = new DataView(buffer, byteOffset, byteLength);
     this.unknown1 = dv.getUint16(0, true);
+    this.index = dv.getUint16(2, true);
     var bytes = new Uint8Array(buffer, byteOffset, byteLength);
     var offset = 4;
     var startOffset = offset;
