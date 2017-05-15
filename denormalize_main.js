@@ -1140,7 +1140,7 @@ function() {
       return anim;
     },
     get byteLength() {
-      return 6 + this.isAnimated ? this.animation.byteLength : 0;
+      return 6 + (this.isAnimated ? this.animation.byteLength : 0);
     },
   };
   
