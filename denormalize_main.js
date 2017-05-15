@@ -1204,7 +1204,7 @@ function() {
       });
     },
     get retrievedSpriteInfo() {
-      var info = this.retrieveInfo('sprite', this.fileHeader.spriteRecordsOffset);
+      var info = this.retrieveInfo('sprite', this.fileHeader.spriteRecordsOffset - 8);
       Object.defineProperty(this, 'retrievedSpriteInfo', {value:info, enumerable:true});
       return info;
     },
