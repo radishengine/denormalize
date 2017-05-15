@@ -20,18 +20,19 @@ function() {
     }
     if (nextBuf && sliceFrom >= nextBuf.bufferOffset && sliceTo <= (nextBuf.bufferOffset + nextBuf.byteLength)) {
       return nextBuf.then(function(buf) {
-        return new Uint8Array(buf, sliceFrom - buf.bufferOffset, sliceTo - sliceFrom));
+        return new Uint8Array(buf, sliceFrom - buf.bufferOffset, sliceTo - sliceFrom);
       });
     }
     var bufferStart = Math.floor(sliceFrom / BUFFER_SIZE) * BUFFER_SIZE;
     var bufferEnd = Math.min(this.size, Math.ceil(sliceTo / BUFFER_SIZE) * BUFFER_SIZE);
     var self = this;
-    return (this.nextBuffer = Object.assign(new Promise(function(resolve, reject) {
+    return (nextBuf = this.nextBuffer = Object.assign(new Promise(function(resolve, reject) {
       var fr = new FileReader;
       fr.onload = function() {
         var buf = this.result;
         buf.bufferOffset = bufferStart;
         self.buffer = buf;
+        if (self.nextBuffer === nextBuf) delete self.nextBuffer;
         resolve(buf);
       };
       fr.onerror = function() {
