@@ -1408,8 +1408,8 @@ function() {
           textureInfo.forEach(function(image) {
             var textureElement = document.createElement('DIV');
             textureElement.dataset.index = textureInfo.index;
-            textureElement.dataset.shortName = textureInfo.shortName;
-            textureElement.dataset.longName = textureInfo.longName;
+            textureElement.dataset.shortName = image.shortName;
+            textureElement.dataset.longName = image.longName;
             textureElement.setAttribute('title', textureInfo.shortName + '\n' + textureInfo.longName);
             textureElement.style.background = 'hsl(' + (1 + Math.floor(Math.random() * 359)) + ', 80%, 70%)';
             section.sprites.appendChild(textureElement);
