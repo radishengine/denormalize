@@ -1463,7 +1463,7 @@ function() {
           el.dataset.height = header.height;
           el.dataset.log2h = Math.ceil(Math.log2(header.height));
           el.dataset.wxh = header.width * header.height;
-          el.style.order = header.height;
+          el.style.order = el.dataset.log2h;
         });
       }
       DAS.read(file).then(function(das) {
