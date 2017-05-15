@@ -1200,7 +1200,7 @@ function() {
     
     var imageInfo = this.imageInfo = [];
     var imageInfoByIndex = this.imageInfoByIndex = {};
-    nameSection.records.forEach(nameSection.records, function(record) {
+    nameSection.records.forEach(function(record) {
       var offset = imageRecords[record.index*2];
       if (!offset) return;
       imageInfo.push(imageInfoByIndex[record.index] = new DASImage(
