@@ -1408,9 +1408,11 @@ function() {
           textureInfo.forEach(function(image) {
             var textureElement = document.createElement('DIV');
             textureElement.dataset.index = textureInfo.index;
-            textureElement.dataset.shortName = image.shortName;
-            textureElement.dataset.longName = image.longName;
-            textureElement.setAttribute('title', image.shortName + '\n' + image.longName);
+            textureElement.dataset.shortName = image.nameRecord.shortName;
+            textureElement.dataset.longName = image.nameRecord.longName;
+            textureElement.setAttribute('title', [
+              textureElement.dataset.shortName,
+              textureElement.dataset.longName].join('\n'));
             textureElement.style.background = 'hsl(' + (1 + Math.floor(Math.random() * 359)) + ', 80%, 70%)';
             section.sprites.appendChild(textureElement);
             image.retrievedHeader.then(function(header) {
