@@ -1376,7 +1376,7 @@ function() {
         });
         das.retrievedTextureInfo.then(function(textureInfo) {
           var textureElement = document.createElement('DIV');
-          textureElement.style.background = 'hsv(' + (1 + Math.floor(Math.random() * 359))) + ', 80%, 70%)';
+          textureElement.style.background = 'hsv(' + (1 + Math.floor(Math.random() * 359)) + ', 80%, 70%)';
           textureElement.style.width = (50 + Math.floor(Math.random() * 200)) + 'px';
           textureElement.style.height = (50 + Math.floor(Math.random() * 200)) + 'px';
           section.sprites.appendChild(textureElement);
