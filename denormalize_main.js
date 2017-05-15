@@ -1405,15 +1405,15 @@ function() {
           console.log(spriteInfo);
         });
         das.retrievedTextureInfo.then(function(textureInfo) {
-          for (var i = 0; i < textureInfo.length; i++) {
+          textureInfo.forEach(function(image) {
             var textureElement = document.createElement('DIV');
             textureElement.style.background = 'hsl(' + (1 + Math.floor(Math.random() * 359)) + ', 80%, 70%)';
             section.sprites.appendChild(textureElement);
-            textureInfo.retrievedHeader.then(function(header) {
+            image.retrievedHeader.then(function(header) {
               textureElement.style.width = header.width + 'px';
               textureElement.style.height = header.height + 'px';
             });
-          }
+          });
         });
       });
     }
