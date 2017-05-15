@@ -1401,10 +1401,19 @@ function() {
       section.sprites.classList.add('gallery');
       section.textures.classList.add('gallery');
       
+      function span(className, text) {
+        var span = document.createElement('SPAN');
+        span.className = className;
+        span.innerText = text;
+        return span;
+      }
+      
       section.insertBefore(section.sprites.head = document.createElement('H3'), section.sprites);
-      section.sprites.head.innerText = 'Sprites';
+      section.sprites.head.appendChild(section.sprites.nameSpan = span('name', 'Sprites'));
+      section.sprites.head.appendChild(section.sprites.countSpan = span('count', '...'));
       section.insertBefore(section.textures.head = document.createElement('H3'), section.textures);
-      section.textures.head.innerText = 'Textures';
+      section.textures.head.appendChild(section.textures.nameSpan = span('name', 'Textures'));
+      section.textures.head.appendChild(section.textures.countSpan = span('count', '...'));
       
       function createSorter(subsection) {
         subsection.head.appendChild(document.createTextNode(' '));
@@ -1413,20 +1422,17 @@ function() {
           {value:'index', text:'Index'},
           //{value:'shortName', text:'Short Name'},
           //{value:'longName', text:'Long Name'},
-          {value:'width', text:'Width'},
-          {value:'height', text:'Height'},
-          {value:'log2h', text:'Log2 Height', selected:true},
-          {value:'wxh', text:'W\xD7H'},
+          {value:'log2h', text:'Size', selected:true},
         ];
         for (var i = 0; i < options.length; i++) {
           var option = document.createElement('OPTION');
           option.value = '+' + options[i].value;
-          option.text = String.fromCharCode(0x1F845) + ' ' + options[i].text;
+          option.text = String.fromCharCode(0x2191) + ' ' + options[i].text;
           subsection.sorter.appendChild(option);
           
           var option = document.createElement('OPTION');
           option.value = '-' + options[i].value;
-          option.text = String.fromCharCode(0x1F847) + ' ' + options[i].text;
+          option.text = String.fromCharCode(0x2193) + ' ' + options[i].text;
           if (options[i].selected) option.selected = true;
           subsection.sorter.appendChild(option);
         }
@@ -1468,9 +1474,11 @@ function() {
       }
       DAS.read(file).then(function(das) {
         das.retrievedSpriteInfo.then(function(spriteInfo) {
+          section.sprites.countSpan.innerText = spriteInfo.length;
           spriteInfo.forEach(addImage, section.sprites);
         });
         das.retrievedTextureInfo.then(function(textureInfo) {
+          section.sprites.countSpan.innerText = textureInfo.length;
           textureInfo.forEach(addImage, section.textures);
         });
       });
