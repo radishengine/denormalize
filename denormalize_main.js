@@ -1478,7 +1478,7 @@ function() {
           spriteInfo.forEach(addImage, section.sprites);
         });
         das.retrievedTextureInfo.then(function(textureInfo) {
-          section.sprites.countSpan.innerText = textureInfo.length;
+          section.textures.countSpan.innerText = textureInfo.length;
           textureInfo.forEach(addImage, section.textures);
         });
       });
