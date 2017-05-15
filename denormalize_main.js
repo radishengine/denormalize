@@ -1414,19 +1414,20 @@ function() {
           //{value:'shortName', text:'Short Name'},
           //{value:'longName', text:'Long Name'},
           {value:'width', text:'Width'},
-          {value:'height', text:'Height', selected:true},
+          {value:'height', text:'Height'},
+          {value:'log2h', text:'Log2 Height', selected:true},
           {value:'wxh', text:'W\xD7H'},
         ];
         for (var i = 0; i < options.length; i++) {
           var option = document.createElement('OPTION');
           option.value = '+' + options[i].value;
-          option.text = '\u2191 ' + options[i].text;
+          option.text = String.fromCharCode(0x1F845) + ' ' + options[i].text;
           if (options[i].selected) option.selected = true;
           subsection.sorter.appendChild(option);
           
           var option = document.createElement('OPTION');
           option.value = '-' + options[i].value;
-          option.text = '\u2193 ' + options[i].text;
+          option.text = String.fromCharCode(0x1F847) + ' ' + options[i].text;
           subsection.sorter.appendChild(option);
         }
         subsection.sorter.onchange = function(e) {
@@ -1460,6 +1461,7 @@ function() {
           el.style.height = header.height + 'px';
           el.dataset.width = header.width;
           el.dataset.height = header.height;
+          el.dataset.log2h = Math.ceil(Math.log2(header.height));
           el.dataset.wxh = header.width * header.height;
           el.style.order = header.height;
         });
