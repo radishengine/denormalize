@@ -14,25 +14,36 @@ function() {
   
   Blob.prototype.readBuffered = function(sliceFrom, sliceTo) {
     if (sliceTo < sliceFrom) throw new RangeError('sliceTo < sliceFrom');
-    var buf = this.buffer;
+    var buf = this.buffer, nextBuf = this.nextBuffer;
     if (buf && sliceFrom >= buf.bufferOffset && sliceTo <= (buf.bufferOffset + buf.byteLength)) {
       return Promise.resolve(new Uint8Array(buf, sliceFrom - buf.bufferOffset, sliceTo - sliceFrom));
+    }
+    if (nextBuf && sliceFrom >= nextBuf.bufferOffset && sliceTo <= (nextBuf.bufferOffset + nextBuf.byteLength)) {
+      return nextBuf.then(function(buf) {
+        return new Uint8Array(buf, sliceFrom - buf.bufferOffset, sliceTo - sliceFrom));
+      });
     }
     var bufferStart = Math.floor(sliceFrom / BUFFER_SIZE) * BUFFER_SIZE;
     var bufferEnd = Math.min(this.size, Math.ceil(sliceTo / BUFFER_SIZE) * BUFFER_SIZE);
     var self = this;
-    return new Promise(function(resolve, reject) {
+    return (this.nextBuffer = Object.assign(new Promise(function(resolve, reject) {
       var fr = new FileReader;
       fr.onload = function() {
         var buf = this.result;
         buf.bufferOffset = bufferStart;
         self.buffer = buf;
-        resolve(new Uint8Array(buf, sliceFrom - bufferStart, sliceTo - sliceFrom));
+        resolve(buf);
       };
       fr.onerror = function() {
         reject(this.error);
       };
       fr.readAsArrayBuffer(self.slice(bufferStart, bufferEnd));
+    }), {
+      bufferOffset: bufferStart,
+      byteLength: bufferEnd - bufferStart,
+    }))
+    .then(function(buf) {
+      return new Uint8Array(buf, sliceFrom - bufferStart, sliceTo - sliceFrom);
     });
   };
   
@@ -1012,23 +1023,24 @@ function() {
     get hasValidSignature() {
       return this.signature === 'DASP\x05\x00';
     },
-    get textureRecordsOffset() {
-      return this.dv.getUint16(8, true);
+    get imageRecordsOffset() {
+      return this.dv.getUint32(8, true);
     },
-    get spriteRecordsOffset() {
-      return this.textureRecordsOffset + 0x1000 * 8;
+    get imageRecordsByteLength() {
+      return this.dv.getUint16(6, true);
     },
-    // uint16_t always_0x00
     get paletteOffset() {
       return this.dv.getUint32(12, true);
     },
-    // uint32_t unknown_3;
+    // uint32_t
     get namesOffset() {
       return this.dv.getUint32(20, true);
     },
-    // uint32_t unknown_4;
-    // uint32_t unknown_5;
-    // uint32_t unknown_6;
+    get namesByteLength() {
+      return this.dv.getUint32(24, true);
+    },
+    // uint32_t
+    // uint32_t
   };
   DASFileHeader.byteLength = 36;
   
@@ -1147,7 +1159,7 @@ function() {
   
   function DASImage(das, nameRecord, offset, unknown) {
     this.das = das;
-    this.blob = das.blob.slice();
+    this.blob = das.blob;
     this.nameRecord = nameRecord;
     this.offset = offset;
     this.unknown = unknown;
@@ -1180,40 +1192,34 @@ function() {
     },
   };
   
-  function DAS(blob, fileHeader, nameSection) {
+  function DAS(blob, fileHeader, imageRecords, nameSection) {
     this.blob = blob;
     this.fileHeader = fileHeader;
-    this.nameSection = nameSection;
+    
+    var imageInfo = this.imageInfo = [];
+    var imageInfoByIndex = this.imageInfoByIndex = {};
+    nameSection.records.forEach(nameSection.records, function(record) {
+      var offset = imageRecords[record.index*2];
+      if (!offset) continue;
+      imageInfo.push(imageInfoByIndex[record.index] = new DASImage(
+        record,
+        offset,
+        imageRecords[record.index*2 + 1]));
+    });
+    for (var i = 0; i < imageRecords.length/2; i++) {
+      var offset = imageRecords[i*2];
+      if (offset && !(i in imageInfoByIndex)) {
+        imageInfo.push(imageInfoByIndex[i] = new DASImage(
+          {shortName:'', longName:''},
+          offset,
+          imageRecords[i*2 + 1]));
+      }
+    }
+    imageRecords.sort(function(a, b) {
+      return a.offset - b.offset;
+    });
   }
   DAS.prototype = {
-    retrieveInfo: function(kind, baseOffset) {
-      var self = this;
-      var records = this.nameSection.records.filter(function(record) {
-        return record.kind === kind;
-      });
-      var maxIndex = records.reduce(function(accumulator, record) {
-        return Math.max(accumulator, record.index);
-      }, 0);
-      return this.blob.readBuffered(baseOffset, baseOffset + 8 * (maxIndex + 1))
-      .then(function(bytes) {
-        var dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-        return records.map(function(record) {
-          return new DASImage(self, record,
-            dv.getUint32(record.index*8, true),
-            dv.getUint32(record.index*8 + 4, true));
-        });
-      });
-    },
-    get retrievedSpriteInfo() {
-      var info = this.retrieveInfo('sprite', this.fileHeader.spriteRecordsOffset);
-      Object.defineProperty(this, 'retrievedSpriteInfo', {value:info, enumerable:true});
-      return info;
-    },
-    get retrievedTextureInfo() {
-      var info = this.retrieveInfo('texture', this.fileHeader.textureRecordsOffset);
-      Object.defineProperty(this, 'retrievedTextureInfo', {value:info, enumerable:true});
-      return info;
-    },
     /*
     getPalette: function() {
       function loadImageBlock(block) {
@@ -1283,13 +1289,35 @@ function() {
   };
   DAS.read = function(blob) {
     var fileHeader;
-    return blob.slice(0, DASFileHeader.byteLength).readAllBytes().then(function(headerBytes) {
+    return blob.readBuffered(0, DASFileHeader.byteLength).then(function(headerBytes) {
       fileHeader = new DASFileHeader(headerBytes.buffer, headerBytes.byteOffset, headerBytes.byteLength);
-      return blob.slice(fileHeader.namesOffset).readArrayBuffer().then(function(ab) {
+      var gotImageRecords = blob.readBuffered(
+        fileHeader.imageRecordsOffset,
+        fileHeader.imageRecordsOffset + fileHeader.imageRecordsByteLength)
+      .then(function(imageRecords) {
+        if (LITTLE_ENDIAN && !(imageRecords.byteOffset & 3)) {
+          return new Uint32Array(imageRecords.buffer, imageRecords.byteOffset, imageRecords.byteLength/4);
+        }
+        var dv = new DataView(imageRecords.buffer, imageRecords.byteOffset, imageRecords.byteLength);
+        var uints = new Uint32Array(imageRecords.byteLength/4);
+        for (var i = 0; i < uints.length; i++) {
+          uints[i] = dv.getUint32(i*4, true);
+        }
+        return uints;
+      });
+      var gotNamesSection = blob.slice(
+        fileHeader.namesOffset,
+        fileHeader.namesOffset + fileHeader.namesByteLength)
+      .readArrayBuffer().then(function(ab) {
+        return new DASNamesSection(ab, 0, ab.byteLength));
+      });
+      return Promise.all([gotImageRecords, gotNamesSection]).then(function(values) {
+        var imageRecords = values[0], namesSection = values[1];
         return new DAS(
-          blob.slice(0, headerBytes.namesOffset),
+          blob,
           fileHeader,
-          new DASNamesSection(ab, 0, ab.byteLength));
+          imageRecords,
+          namesSection);
       });
     });
   };
@@ -1396,92 +1424,80 @@ function() {
         });
     }
     else if (/\.das$/i.test(file.name)) {
-      section.appendChild(section.sprites = document.createElement('DIV'));
-      section.appendChild(section.textures = document.createElement('DIV'));
-      
-      section.sprites.classList.add('gallery');
-      section.textures.classList.add('gallery');
-      
-      function span(className, text) {
-        var span = document.createElement('SPAN');
-        span.className = className;
-        span.innerText = text;
-        return span;
-      }
-      
-      section.insertBefore(section.sprites.head = document.createElement('H3'), section.sprites);
-      section.sprites.head.appendChild(section.sprites.nameSpan = span('name', 'Sprites'));
-      section.sprites.head.appendChild(section.sprites.countSpan = span('count', '...'));
-      section.insertBefore(section.textures.head = document.createElement('H3'), section.textures);
-      section.textures.head.appendChild(section.textures.nameSpan = span('name', 'Textures'));
-      section.textures.head.appendChild(section.textures.countSpan = span('count', '...'));
-      
-      function createSorter(subsection) {
-        subsection.head.appendChild(document.createTextNode(' '));
-        subsection.head.appendChild(subsection.sorter = document.createElement('SELECT'));
-        var options = [
-          {value:'index', text:'Index'},
-          //{value:'shortName', text:'Short Name'},
-          //{value:'longName', text:'Long Name'},
-          {value:'log2h', text:'Size', selected:true},
-        ];
-        for (var i = 0; i < options.length; i++) {
-          var option = document.createElement('OPTION');
-          option.value = '+' + options[i].value;
-          option.text = String.fromCharCode(0x2191) + ' ' + options[i].text;
-          subsection.sorter.appendChild(option);
-          
-          var option = document.createElement('OPTION');
-          option.value = '-' + options[i].value;
-          option.text = String.fromCharCode(0x2193) + ' ' + options[i].text;
-          if (options[i].selected) option.selected = true;
-          subsection.sorter.appendChild(option);
-        }
-        subsection.sorter.onchange = function(e) {
-          var multiply = +(this.value.slice(0, 1) + '1');
-          var dataField = this.value.slice(1);
-          for (var i = 0; i < subsection.children.length; i++) {
-            subsection.children[i].style.order = multiply * subsection.children[i].dataset[dataField];
-          }
-        };
-      }
-      
-      createSorter(section.sprites);
-      createSorter(section.textures);
-      
-      function addImage(image) {
-        var el = document.createElement('DIV');
-        el.dataset.index = image.nameRecord.index;
-        el.dataset.shortName = image.nameRecord.shortName;
-        el.dataset.longName = image.nameRecord.longName;
-        el.setAttribute('title', [
-          image.nameRecord.kind.slice(0,1).toUpperCase()
-          + image.nameRecord.kind.slice(1)
-          + ' ' + image.nameRecord.index
-          + ': ' + el.dataset.shortName,
-          el.dataset.longName,
-        ].join('\n'));
-        el.style.background = 'hsl(' + Math.random()*360 + ', 80%, 70%)';
-        this.appendChild(el);
-        image.retrievedHeader.then(function(header) {
-          el.style.width = header.width + 'px';
-          el.style.height = header.height + 'px';
-          el.dataset.width = header.width;
-          el.dataset.height = header.height;
-          el.dataset.log2h = Math.ceil(Math.log2(header.height));
-          el.dataset.wxh = header.width * header.height;
-          el.style.order = -el.dataset.log2h;
-        });
-      }
       DAS.read(file).then(function(das) {
-        das.retrievedSpriteInfo.then(function(spriteInfo) {
-          section.sprites.countSpan.innerText = spriteInfo.length;
-          spriteInfo.forEach(addImage, section.sprites);
-        });
-        das.retrievedTextureInfo.then(function(textureInfo) {
-          section.textures.countSpan.innerText = textureInfo.length;
-          textureInfo.forEach(addImage, section.textures);
-        });
+        section.appendChild(section.images = document.createElement('DIV'));
+
+        section.images.classList.add('gallery');
+
+        function span(className, text) {
+          var span = document.createElement('SPAN');
+          span.className = className;
+          span.innerText = text;
+          return span;
+        }
+
+        section.insertBefore(section.images.head = document.createElement('H3'), section.images);
+        section.images.head.appendChild(section.images.nameSpan = span('name', 'Images'));
+        section.images.head.appendChild(section.images.countSpan = span('count', das.imageRecords.length));
+
+        function createSorter(subsection) {
+          subsection.head.appendChild(document.createTextNode(' '));
+          subsection.head.appendChild(subsection.sorter = document.createElement('SELECT'));
+          var options = [
+            {value:'index', text:'Index'},
+            //{value:'shortName', text:'Short Name'},
+            //{value:'longName', text:'Long Name'},
+            {value:'log2h', text:'Size', selected:true},
+          ];
+          for (var i = 0; i < options.length; i++) {
+            var option = document.createElement('OPTION');
+            option.value = '+' + options[i].value;
+            option.text = String.fromCharCode(0x2191) + ' ' + options[i].text;
+            subsection.sorter.appendChild(option);
+
+            var option = document.createElement('OPTION');
+            option.value = '-' + options[i].value;
+            option.text = String.fromCharCode(0x2193) + ' ' + options[i].text;
+            if (options[i].selected) option.selected = true;
+            subsection.sorter.appendChild(option);
+          }
+          subsection.sorter.onchange = function(e) {
+            var multiply = +(this.value.slice(0, 1) + '1');
+            var dataField = this.value.slice(1);
+            for (var i = 0; i < subsection.children.length; i++) {
+              subsection.children[i].style.order = multiply * subsection.children[i].dataset[dataField];
+            }
+          };
+        }
+
+        createSorter(section.images);
+
+        function addImage(image) {
+          var el = document.createElement('DIV');
+          el.dataset.index = image.nameRecord.index;
+          el.dataset.shortName = image.nameRecord.shortName;
+          el.dataset.longName = image.nameRecord.longName;
+          el.setAttribute('title', [
+            image.nameRecord.kind.slice(0,1).toUpperCase()
+            + image.nameRecord.kind.slice(1)
+            + ' ' + image.nameRecord.index
+            + ': ' + el.dataset.shortName,
+            el.dataset.longName,
+          ].join('\n'));
+          el.style.background = 'hsl(' + Math.random()*360 + ', 80%, 70%)';
+          this.appendChild(el);
+          image.retrievedHeader.then(function(header) {
+            el.style.width = header.width + 'px';
+            el.style.height = header.height + 'px';
+            el.dataset.width = header.width;
+            el.dataset.height = header.height;
+            el.dataset.log2h = Math.ceil(Math.log2(header.height));
+            el.dataset.wxh = header.width * header.height;
+            el.style.order = -el.dataset.log2h;
+          });
+        }
+        
+        das.imageRecords.forEach(addImage, section.images);
       });
     }
     else {
