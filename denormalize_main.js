@@ -1146,10 +1146,38 @@ function() {
   
   function DASImage(das, nameRecord, offset, unknown) {
     this.das = das;
+    this.blob = das.blob.slice();
     this.nameRecord = nameRecord;
     this.offset = offset;
     this.unknown = unknown;
   }
+  DASImage.prototype = {
+    get retrievedHeader() {
+      var self = this, blob = this.blob, header;
+      var promise = blob.readBuffered(this.offset, Math.min(blob.size, this.offset + 14))
+      .then(function(headerBytes) {
+        var tempHeader = new DASImageHeader(headerBytes.buffer, headerBytes.byteOffset, headerBytes.byteLength);
+        return blob.readBuffered(self.offset, self.offset + tempHeader.byteLength);
+      })
+      .then(function(headerBytes) {
+        return new DASImageHeader(headerBytes.buffer, headerBytes.byteOffset, headerBytes.byteLength);
+      });
+      Object.defineProperty(this, 'retrievedHeader', {value:promise, enumerable:true});
+      return promise;
+    },
+    getFirstFrame: function() {
+      var self = this, blob = this.blob;
+      var palette, header;
+      return Promise.all([this.das.retrievedPalette, this.retrievedHeader])
+      .then(function(values) {
+        palette = values[0];
+        header = values[1];
+        return blob.readBuffered(
+          self.offset + header.byteLength,
+          self.offset + header.byteLength + header.width * header.height);
+      });
+    },
+  };
   
   function DAS(blob, fileHeader, nameSection) {
     this.blob = blob;
@@ -1380,9 +1408,11 @@ function() {
           for (var i = 0; i < textureInfo.length; i++) {
             var textureElement = document.createElement('DIV');
             textureElement.style.background = 'hsl(' + (1 + Math.floor(Math.random() * 359)) + ', 80%, 70%)';
-            textureElement.style.width = (50 + Math.floor(Math.random() * 200)) + 'px';
-            textureElement.style.height = (50 + Math.floor(Math.random() * 200)) + 'px';
             section.sprites.appendChild(textureElement);
+            textureInfo.retrievedHeader.then(function(header) {
+              textureElement.style.width = header.width + 'px';
+              textureElement.style.height = header.height + 'px';
+            });
           }
         });
       });
