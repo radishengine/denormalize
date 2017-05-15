@@ -1422,12 +1422,12 @@ function() {
           var option = document.createElement('OPTION');
           option.value = '+' + options[i].value;
           option.text = String.fromCharCode(0x1F845) + ' ' + options[i].text;
-          if (options[i].selected) option.selected = true;
           subsection.sorter.appendChild(option);
           
           var option = document.createElement('OPTION');
           option.value = '-' + options[i].value;
           option.text = String.fromCharCode(0x1F847) + ' ' + options[i].text;
+          if (options[i].selected) option.selected = true;
           subsection.sorter.appendChild(option);
         }
         subsection.sorter.onchange = function(e) {
@@ -1463,7 +1463,7 @@ function() {
           el.dataset.height = header.height;
           el.dataset.log2h = Math.ceil(Math.log2(header.height));
           el.dataset.wxh = header.width * header.height;
-          el.style.order = el.dataset.log2h;
+          el.style.order = -el.dataset.log2h;
         });
       }
       DAS.read(file).then(function(das) {
