@@ -1200,10 +1200,12 @@ function() {
     
     var imageRecords = this.imageRecords = [];
     var imageRecordsByIndex = this.imageRecordsByIndex = {};
+    var self = this;
     nameSection.records.forEach(function(record) {
       var offset = offsetRecords[record.index*2];
       if (!offset) return;
       imageRecords.push(imageRecordsByIndex[record.index] = new DASImage(
+        self,
         record,
         offset,
         offsetRecords[record.index*2 + 1]));
@@ -1212,6 +1214,7 @@ function() {
       var offset = offsetRecords[i*2];
       if (offset && !(i in imageRecordsByIndex)) {
         imageRecords.push(imageRecordsByIndex[i] = new DASImage(
+          self,
           {shortName:'', longName:''},
           offset,
           offsetRecords[i*2 + 1]));
