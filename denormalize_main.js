@@ -1401,9 +1401,9 @@ function() {
       section.sprites.classList.add('gallery');
       section.textures.classList.add('gallery');
       
-      section.insertBefore(section.sprites, section.sprites.head = document.createElement('H3'));
+      section.insertBefore(section.sprites.head = document.createElement('H3'), section.sprites);
       section.sprites.head.innerText = 'Sprites';
-      section.insertBefore(section.textures, section.textures.head = document.createElement('H3'));
+      section.insertBefore(section.textures.head = document.createElement('H3'), section.textures);
       section.textures.head.innerText = 'Textures';
       
       function createSorter(subsection) {
