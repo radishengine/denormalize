@@ -1174,21 +1174,27 @@ function() {
     },
     getFirstFrame: function() {
       var self = this, blob = this.blob;
-      var palette, header;
-      return Promise.all([this.das.retrievedPalette, this.retrievedHeader])
-      .then(function(values) {
-        palette = values[0];
-        header = values[1];
+      var palette = this.das.palette;
+      return this.retrievedHeader.then(function(header) {
         return blob.readBuffered(
           self.offset + header.byteLength,
-          self.offset + header.byteLength + header.width * header.height);
+          self.offset + header.byteLength + header.width * header.height)
+        .then(function(bytes) {
+          var imageData = createImageData(header.width, header.height);
+          var pix4 = new Uint32Array(imageData.data.buffer);
+          for (var i = 0; i < bytes.length; i++) {
+            pix4[i] = palette[bytes[i]];
+          }
+          return imageData;
+        });
       });
     },
   };
   
-  function DAS(blob, fileHeader, offsetRecords, nameSection) {
+  function DAS(blob, fileHeader, offsetRecords, palette, nameSection) {
     this.blob = blob;
     this.fileHeader = fileHeader;
+    this.palette = palette;
     
     var imageRecords = this.imageRecords = [];
     var imageRecordsByIndex = this.imageRecordsByIndex = {};
@@ -1216,74 +1222,6 @@ function() {
       return a.offset - b.offset;
     });
   }
-  DAS.prototype = {
-    /*
-    getPalette: function() {
-      function loadImageBlock(block) {
-        var dv = new DataView(block.buffer, block.byteOffset, block.byteLength);
-        var list = new Array(block.byteLength/8);
-        for (var i = 0; i < list.length; i++) {
-          list[i] = {
-            offset: dv.getUint32(i*8, true),
-            unknown: dv.getUint32(i*8 + 4, true),
-          };
-          if (list[i].offset === 0) list[i] = null;
-        }
-        return list;
-      }
-      function readImage(values) {
-        var info = values[1], data = values[2];
-      }
-      var nameSection = this.nameSection;
-      var maxTextureIndex = 0, maxSpriteIndex = 0;
-      nameSection.records.forEach(function(record) {
-        switch (record.kind) {
-          case 'texture':
-            maxTextureIndex = Math.max(maxTextureIndex, record.index);
-            break;
-          case 'sprite':
-            maxSpriteIndex = Math.max(maxSpriteIndex, record.index);
-            break;
-        }
-      });
-      var readTextureBlock = blob.readBuffered(
-        fileHeader.textureRecordsOffset,
-        fileHeader.textureRecordsOffset + 8 + 8 * maxTextureIndex);
-      var readSpriteBlock = blob.readBuffered(
-        fileHeader.spriteRecordsOffset,
-        fileHeader.spriteRecordsOffset + 8 + 8 * maxSpriteIndex);
-      return Promise.all([
-        readTextureBlock.then(loadImageBlock),
-        readSpriteBlock.then(loadImageBlock),
-      ]);
-    })
-    .then(function(values) {
-      var textures = values[0], sprites = values[1];
-      var combo = [];
-      for (var i = 0; i < textures.length; i++) {
-        if (!textures[i]) continue;
-        combo.push({kind:'texture', index:i, offset:textures[i].offset});
-      }
-      for (var i = 0; i < sprites.length; i++) {
-        if (!sprites[i]) continue;
-        combo.push({kind:'sprite', index:i, offset:sprites[i].offset});
-      }
-      combo.sort(function(a,b) { return a.offset - b.offset; });
-      var slices = new Array(combo.length);
-      for (var i = 0; i < slices.length-1; i++) {
-        slices[i] = Promise.all([
-          combo[i],
-          blob.readBuffered(combo[i].offset, combo[i+1].offset),
-        ]).then(readImage);
-      }
-      slices[i] = Promise.all([
-        combo[i],
-        blob.readBuffered(combo[i].offset, blob.size),
-      ]).then(readImage);
-      return Promise.all(slices);
-    },
-    */
-  };
   DAS.read = function(blob) {
     var fileHeader;
     return blob.readBuffered(0, DASFileHeader.byteLength).then(function(headerBytes) {
@@ -1302,18 +1240,22 @@ function() {
         }
         return uints;
       });
+      var gotPalette = blob.readBuffered(
+        fileHeader.paletteOffset,
+        fileHeader.paletteOffset + 256 * 3).then(readPalette);
       var gotNamesSection = blob.slice(
         fileHeader.namesOffset,
         fileHeader.namesOffset + fileHeader.namesByteLength)
       .readArrayBuffer().then(function(ab) {
         return new DASNamesSection(ab, 0, ab.byteLength);
       });
-      return Promise.all([gotImageRecords, gotNamesSection]).then(function(values) {
-        var imageRecords = values[0], namesSection = values[1];
+      return Promise.all([gotImageRecords, gotPalette, gotNamesSection]).then(function(values) {
+        var imageRecords = values[0], palette = values[1], namesSection = values[2];
         return new DAS(
           blob,
           fileHeader,
           imageRecords,
+          palette,
           namesSection);
       });
     });
@@ -1503,6 +1445,13 @@ function() {
             el.dataset.log2h = Math.ceil(Math.log2(header.height));
             el.dataset.wxh = header.width * header.height;
             el.style.order = -el.dataset.log2h;
+          });
+          image.getFirstFrame().then(function(imageData) {
+            var canvas = document.createElement('CANVAS');
+            canvas.width = imageData.width;
+            canvas.height = imageData.height;
+            canvas.getContext('2d').putImageData(imageData, 0, 0);
+            el.image.appendChild(canvas);
           });
         }
         
