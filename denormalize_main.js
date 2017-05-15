@@ -14,10 +14,11 @@ function() {
   
   Blob.prototype.readBuffered = function(sliceFrom, sliceTo) {
     if (sliceTo < sliceFrom) throw new RangeError('sliceTo < sliceFrom');
-    var buf = this.buffer, nextBuf = this.nextBuffer;
+    var buf = this.buffer;
     if (buf && sliceFrom >= buf.bufferOffset && sliceTo <= (buf.bufferOffset + buf.byteLength)) {
       return Promise.resolve(new Uint8Array(buf, sliceFrom - buf.bufferOffset, sliceTo - sliceFrom));
     }
+    var nextBuf = this.nextBuffer;
     if (nextBuf && sliceFrom >= nextBuf.bufferOffset && sliceTo <= (nextBuf.bufferOffset + nextBuf.byteLength)) {
       return nextBuf.then(function(buf) {
         return new Uint8Array(buf, sliceFrom - buf.bufferOffset, sliceTo - sliceFrom);
