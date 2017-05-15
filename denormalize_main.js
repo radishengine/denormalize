@@ -1454,7 +1454,7 @@ function() {
             canvas.height = imageData.height;
             canvas.getContext('2d').putImageData(imageData, 0, 0);
             el.image.appendChild(canvas);
-            el.image.background = 'transparent';
+            el.image.style.background = 'transparent';
           });
         }
         
