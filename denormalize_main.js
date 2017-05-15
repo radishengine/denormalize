@@ -1495,11 +1495,11 @@ function() {
           el.image.style.background = 'hsl(' + Math.random()*360 + ', 80%, 70%)';
           
           el.appendChild(el.shortNameSpan = document.createElement('DIV'));
-          el.shortNameSpan.innerText = el.dataset.shortNameSpan;
+          el.shortNameSpan.innerText = el.dataset.shortName;
           el.shortNameSpan.className = 'short-name';
           
           el.appendChild(el.longNameSpan = document.createElement('DIV'));
-          el.longNameSpan.innerText = el.dataset.longNameSpan;
+          el.longNameSpan.innerText = el.dataset.longName;
           el.longNameSpan.className = 'long-name';
           
           this.appendChild(el);
