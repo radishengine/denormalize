@@ -1180,7 +1180,7 @@ function() {
           self.offset + header.byteLength,
           self.offset + header.byteLength + header.width * header.height)
         .then(function(bytes) {
-          var imageData = createImageData(header.width, header.height);
+          var imageData = new ImageData(header.width, header.height);
           var pix4 = new Uint32Array(imageData.data.buffer);
           for (var i = 0; i < bytes.length; i++) {
             pix4[i] = palette[bytes[i]];
