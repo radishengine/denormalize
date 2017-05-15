@@ -1396,31 +1396,78 @@ function() {
     }
     else if (/\.das$/i.test(file.name)) {
       section.appendChild(section.sprites = document.createElement('DIV'));
-      section.sprites.style.display = 'flex';
-      section.sprites.style.flexFlow = 'row wrap';
-      section.sprites.style.justifyContent = 'space-around';
-      section.sprites.style.alignItems = 'center';
+      section.appendChild(section.textures = document.createElement('DIV'));
+      
+      section.sprites.classList.add('gallery');
+      section.textures.classList.add('gallery');
+      
+      section.insertBefore(section.sprites, section.sprites.head = document.createElement('H3'));
+      section.sprites.head.innerText = 'Sprites';
+      section.insertBefore(section.textures, section.textures.head = document.createElement('H3'));
+      section.textures.head.innerText = 'Textures';
+      
+      function createSorter(subsection) {
+        subsection.head.appendChild(document.createTextNode(' '));
+        subsection.head.appendChild(subsection.sorter = document.createElement('SELECT'));
+        var options = [
+          {value:'index', text:'Index'},
+          //{value:'shortName', text:'Short Name'},
+          //{value:'longName', text:'Long Name'},
+          {value:'width', text:'Width'},
+          {value:'height', text:'Height', selected:true},
+          {value:'wxh', text:'W\xD7H'},
+        ];
+        for (var i = 0; i < options.length; i++) {
+          var option = document.createElement('OPTION');
+          option.value = '+' + options[i].value;
+          option.text = '\u2191 ' + options[i].text;
+          if (options[i].selected) option.selected = true;
+          subsection.sorter.appendChild(option);
+          
+          var option = document.createElement('OPTION');
+          option.value = '-' + options[i].value;
+          option.text = '\u2193 ' + options[i].text;
+          subsection.sorter.appendChild(option);
+        }
+        subsection.sorter.onchange = function(e) {
+          var multiply = +(this.value.slice(0, 1) + '1');
+          var dataField = this.value.slice(1);
+          for (var i = 0; i < subsection.children.length; i++) {
+            subsection.children[i].style.order = multiply * subsection.children[i].dataset[dataField];
+          }
+        };
+      }
+      
+      createSorter(section.sprites);
+      createSorter(section.textures);
+      
+      function addImage(image) {
+        var el = document.createElement('DIV');
+        el.dataset.index = image.nameRecord.index;
+        el.dataset.shortName = image.nameRecord.shortName;
+        el.dataset.longName = image.nameRecord.longName;
+        el.setAttribute('title', [
+          image.nameRecord.kind.slice(0,1).toUpperCase() + image.nameRecord.kind.slice(1) + ' ' + image.index,
+          el.dataset.shortName,
+          el.dataset.longName,
+        ].join('\n'));
+        el.style.background = 'hsl(' + Math.random()*360 + ', 80%, 70%)';
+        this.appendChild(el);
+        image.retrievedHeader.then(function(header) {
+          el.style.width = header.width + 'px';
+          el.style.height = header.height + 'px';
+          el.dataset.width = header.width;
+          el.dataset.height = header.height;
+          el.dataset.wxh = header.width * header.height;
+          el.style.order = header.height;
+        });
+      }
       DAS.read(file).then(function(das) {
         das.retrievedSpriteInfo.then(function(spriteInfo) {
-          console.log(spriteInfo);
+          spriteInfo.forEach(addImage, section.sprites);
         });
         das.retrievedTextureInfo.then(function(textureInfo) {
-          textureInfo.forEach(function(image) {
-            var textureElement = document.createElement('DIV');
-            textureElement.dataset.index = textureInfo.index;
-            textureElement.dataset.shortName = image.nameRecord.shortName;
-            textureElement.dataset.longName = image.nameRecord.longName;
-            textureElement.setAttribute('title', [
-              textureElement.dataset.shortName,
-              textureElement.dataset.longName].join('\n'));
-            textureElement.style.background = 'hsl(' + (1 + Math.floor(Math.random() * 359)) + ', 80%, 70%)';
-            section.sprites.appendChild(textureElement);
-            image.retrievedHeader.then(function(header) {
-              textureElement.style.width = header.width + 'px';
-              textureElement.style.height = header.height + 'px';
-              textureElement.style.order = header.height;
-            });
-          });
+          textureInfo.forEach(addImage, section.textures);
         });
       });
     }
