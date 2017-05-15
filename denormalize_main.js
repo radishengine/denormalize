@@ -1165,8 +1165,12 @@ function() {
     this.nameRecord = nameRecord;
     this.offset = offset;
     this.unknown = unknown;
+    this.index = nameRecord.index;
   }
   DASImage.prototype = {
+    get kind() {
+      return (this.index >= 0x1000) ? 'sprite' : 'texture';
+    },
     get retrievedHeader() {
       var self = this, blob = this.blob, header;
       var promise = blob.readBuffered(this.offset, Math.min(blob.size, this.offset + 14))
@@ -1479,7 +1483,7 @@ function() {
 
         function addImage(image) {
           var el = document.createElement('DIV');
-          el.className = 'gallery-item';
+          el.className = 'gallery-item kind-' + image.kind;
           el.dataset.index = image.nameRecord.index;
           el.dataset.shortName = image.nameRecord.shortName;
           el.dataset.longName = image.nameRecord.longName;
