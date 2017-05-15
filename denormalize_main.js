@@ -1370,6 +1370,8 @@ function() {
       section.appendChild(section.sprites = document.createElement('DIV'));
       section.sprites.style.display = 'flex';
       section.sprites.style.flexFlow = 'row wrap';
+      section.sprites.style.justifyContent = 'space-around';
+      section.sprites.style.alignItems = 'center';
       DAS.read(file).then(function(das) {
         das.retrievedSpriteInfo.then(function(spriteInfo) {
           console.log(spriteInfo);
