@@ -1410,7 +1410,7 @@ function() {
             textureElement.dataset.index = textureInfo.index;
             textureElement.dataset.shortName = image.shortName;
             textureElement.dataset.longName = image.longName;
-            textureElement.setAttribute('title', textureInfo.shortName + '\n' + textureInfo.longName);
+            textureElement.setAttribute('title', image.shortName + '\n' + image.longName);
             textureElement.style.background = 'hsl(' + (1 + Math.floor(Math.random() * 359)) + ', 80%, 70%)';
             section.sprites.appendChild(textureElement);
             image.retrievedHeader.then(function(header) {
