@@ -1128,10 +1128,10 @@ function() {
     get isAnimated() {
       return !!(this.flags & 0x100);
     },
-    get width() {
+    get height() {
       return this.dv.getUint16(2, true);
     },
-    get height() {
+    get width() {
       return this.dv.getUint16(4, true);
     },
     get animation() {
