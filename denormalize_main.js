@@ -1311,7 +1311,7 @@ function() {
         fileHeader.namesOffset,
         fileHeader.namesOffset + fileHeader.namesByteLength)
       .readArrayBuffer().then(function(ab) {
-        return new DASNamesSection(ab, 0, ab.byteLength));
+        return new DASNamesSection(ab, 0, ab.byteLength);
       });
       return Promise.all([gotImageRecords, gotNamesSection]).then(function(values) {
         var imageRecords = values[0], namesSection = values[1];
