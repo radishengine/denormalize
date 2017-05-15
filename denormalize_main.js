@@ -1479,6 +1479,7 @@ function() {
 
         function addImage(image) {
           var el = document.createElement('DIV');
+          el.className = 'gallery-item';
           el.dataset.index = image.nameRecord.index;
           el.dataset.shortName = image.nameRecord.shortName;
           el.dataset.longName = image.nameRecord.longName;
@@ -1489,11 +1490,22 @@ function() {
             + ': ' + el.dataset.shortName,
             el.dataset.longName,
           ].join('\n'));
-          el.style.background = 'hsl(' + Math.random()*360 + ', 80%, 70%)';
+          
+          el.appendChild(el.image = document.createElement('DIV'));
+          el.image.style.background = 'hsl(' + Math.random()*360 + ', 80%, 70%)';
+          
+          el.appendChild(el.shortNameSpan = document.createElement('DIV'));
+          el.shortNameSpan.innerText = el.dataset.shortNameSpan;
+          el.shortNameSpan.className = 'short-name';
+          
+          el.appendChild(el.longNameSpan = document.createElement('DIV'));
+          el.longNameSpan.innerText = el.dataset.longNameSpan;
+          el.longNameSpan.className = 'long-name';
+          
           this.appendChild(el);
           image.retrievedHeader.then(function(header) {
-            el.style.width = header.width + 'px';
-            el.style.height = header.height + 'px';
+            el.image.style.width = header.width + 'px';
+            el.image.style.height = header.height + 'px';
             el.dataset.width = header.width;
             el.dataset.height = header.height;
             el.dataset.log2h = Math.ceil(Math.log2(header.height));
