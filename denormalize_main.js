@@ -1182,8 +1182,9 @@ function() {
         .then(function(bytes) {
           var imageData = new ImageData(header.width, header.height);
           var pix4 = new Uint32Array(imageData.data.buffer);
+          const w = header.width, h = header.height;
           for (var i = 0; i < bytes.length; i++) {
-            pix4[i] = palette[bytes[i]];
+            pix4[i] = palette[bytes[(i % w) * h + ((i / w)|0)]];
           }
           return imageData;
         });
