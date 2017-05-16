@@ -35,7 +35,7 @@ define(function() {
         pal[i*3 + 1] = b[i*4 + 1];
         pal[i*3 + 2] = b[i*4 + 2];
       }
-      logicalScreenDescriptor.setUint8(4, 0x80 | ((Math.log2(palSize)-1) << 4));
+      logicalScreenDescriptor.setUint8(4, 0x80 | (Math.log2(palSize)-1));
       parts.push(pal);
     }
     function pushChunked(extParts) {
