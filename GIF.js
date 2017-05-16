@@ -2,6 +2,8 @@ define(function() {
 
   'use strict';
   
+  const CLEAR_TABLE_MODE = false;
+  
   const ONEBYTE_128_255 = (function() {
     var abuf = new ArrayBuffer(128);
     var arrays = new Array(128);
@@ -191,10 +193,13 @@ define(function() {
           indexBuffer = buffer_k;
           continue;
         }
-        codeTable[buffer_k] = nextCode++;
+        if (nextCode < validCodeBoundary) {
+          codeTable[buffer_k] = nextCode++;
+        }
         write(codeTable[indexBuffer], codeSize);
         indexBuffer = k;
         if (nextCode >= validCodeBoundary) {
+          if (!CLEAR_TABLE_MODE) continue;
           if (++codeSize > MAX_CODE_SIZE) {
             write(clearCode, MAX_CODE_SIZE);
             for (k in codeTable) {
