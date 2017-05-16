@@ -169,7 +169,7 @@ define(function() {
           lzw[pos++] = bufferInt >>> 16;
           lzw[pos++] = bufferInt >>> 24;
           bufferBits -= 32;
-          bufferInt = codeSize >>> (codeSize - bufferBits);
+          bufferInt = code >>> (codeSize - bufferBits);
         }
       }
       
