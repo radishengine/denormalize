@@ -2,9 +2,6 @@ define(function() {
 
   'use strict';
   
-  const CLEAR_TABLE_MODE = false;
-  const UNCOMPRESSED_MODE = false; // true;
-  
   const ONEBYTE_128_255 = (function() {
     var abuf = new ArrayBuffer(128);
     var arrays = new Array(128);
@@ -132,6 +129,7 @@ define(function() {
       }
       
       const MAX_CODE_SIZE = 12;
+      const LAST_VALID_CODE = (1 << MAX_CODE_SIZE)-1;
       var minimumCodeSize = 8;
       var clearCode = 1 << minimumCodeSize;
       var endCode = clearCode+1;
@@ -158,16 +156,20 @@ define(function() {
       
       var bufferInt = 0, bufferBits = 0;
       
-      function write(bits, size) {
-        bufferInt |= bits << bufferBits;
-        if ((bufferBits += size) >= 32) {
+      function write(code) {
+        while (code >= validCodeBoundary) {
+          codeSize += 1;
+          validCodeBoundary <<= 1;
+        }
+        bufferInt |= code << bufferBits;
+        if ((bufferBits += codeSize) >= 32) {
           ensure(4);
           lzw[pos++] = bufferInt & 0xff;
           lzw[pos++] = bufferInt >>> 8;
           lzw[pos++] = bufferInt >>> 16;
           lzw[pos++] = bufferInt >>> 24;
           bufferBits -= 32;
-          bufferInt = bits >>> (size - bufferBits);
+          bufferInt = codeSize >>> (codeSize - bufferBits);
         }
       }
       
@@ -183,73 +185,27 @@ define(function() {
       
       parts.push(oneByte(minimumCodeSize));
       
-      write(clearCode, codeSize);
+      write(clearCode);
       
       var in_i = 0;
       var indexBuffer = String.fromCharCode(pix8[in_i++]);
-      if (UNCOMPRESSED_MODE) {
-        write(codeTable[indexBuffer], codeSize);
-      }
       while (in_i < pix8.length) {
         var k = String.fromCharCode(pix8[in_i++]);
-        if (UNCOMPRESSED_MODE) {
-          write(codeTable[k], codeSize);
-          write(clearCode, codeSize);
-          continue;
-        }
-        var buffer_k = indexBuffer+k;
+        var buffer_k = indexBuffer + k;
         if (buffer_k in codeTable) {
           indexBuffer = buffer_k;
           continue;
         }
-        /*
-        if (nextCode < validCodeBoundary) {
+        if (nextCode <= LAST_VALID_CODE) {
           codeTable[buffer_k] = nextCode++;
         }
-        */
-        if (nextCode >= validCodeBoundary) {
-          if (codeSize < MAX_CODE_SIZE) {
-            codeSize++;
-          }
-          else if (CLEAR_TABLE_MODE) {
-            write(clearCode, MAX_CODE_SIZE);
-            for (k in codeTable) {
-              if (k.length !== 1) delete codeTable[k];
-            }
-            codeSize = minimumCodeSize + 1;
-            nextCode = clearCode+2;
-          }
-          validCodeBoundary = 1 << codeSize;
-        }
-        if (nextCode < validCodeBoundary) {
-          codeTable[buffer_k] = nextCode++;
-        }
-        write(codeTable[indexBuffer], codeSize);
+        write(codeTable[indexBuffer]);
         indexBuffer = k;
-        /*
-        if (nextCode >= validCodeBoundary) {
-          if (codeSize < MAX_CODE_SIZE) {
-            codeSize++;
-          }
-          else if (!CLEAR_TABLE_MODE) {
-            continue;
-          }
-          else {
-            write(clearCode, MAX_CODE_SIZE);
-            for (k in codeTable) {
-              if (k.length !== 1) delete codeTable[k];
-            }
-            codeSize = minimumCodeSize + 1;
-            nextCode = clearCode+2;
-          }
-          validCodeBoundary = 1 << codeSize;
-        }
-        */
       }
-      if (!UNCOMPRESSED_MODE) {
-        write(codeTable[indexBuffer], codeSize);
-      }
-      write(endCode, codeSize);
+      
+      write(codeTable[indexBuffer]);
+      
+      write(endCode);
       
       flush();
     }
