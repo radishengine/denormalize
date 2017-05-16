@@ -220,5 +220,7 @@ define(function() {
       height: canvasHeight,
     });
   };
+  
+  return GIF;
 
 });
