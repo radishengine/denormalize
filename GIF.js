@@ -107,7 +107,7 @@ define(function() {
       if (!isNaN(transparent)) {
         graphicControlExtension.setUint8(3, transparent);
       }
-      pushExtension(0xF9, graphicControlExtension);
+      pushExtension(0xF9, [graphicControlExtension]);
       
       var imageDescriptor = new DataView(new ArrayBuffer(10));
       parts.push(imageDescriptor);
