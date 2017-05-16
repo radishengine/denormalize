@@ -2,8 +2,8 @@ requirejs.config({
   waitSeconds: 0,
 });
 
-define([],
-function() {
+define(['GIF'],
+function(GIF) {
 
   'use strict';
   
@@ -1174,19 +1174,20 @@ function() {
     },
     getFirstFrame: function() {
       var self = this, blob = this.blob;
-      var palette = this.das.transparentPalette; // this.kind === 'sprite' ? this.das.transparentPalette : this.das.opaquePalette;
+      var palette = this.das.opaquePalette; // this.kind === 'sprite' ? this.das.transparentPalette : this.das.opaquePalette;
       return this.retrievedHeader.then(function(header) {
         return blob.readBuffered(
           self.offset + header.byteLength,
           self.offset + header.byteLength + header.width * header.height)
         .then(function(bytes) {
-          var imageData = new ImageData(header.width, header.height);
-          var pix4 = new Uint32Array(imageData.data.buffer);
+          var rotated = new Uint8Array(header.width * header.height);
+          rotated.width = header.width;
+          rotated.height = header.height;
           const w = header.width, h = header.height;
           for (var i = 0; i < bytes.length; i++) {
-            pix4[i] = palette[bytes[(i % w) * h + ((i / w)|0)]];
+            rotated[i] = bytes[(i % w)*h + ((i / w)|0)];
           }
-          return imageData;
+          return GIF.encode(palette, [rotated]);
         });
       });
     },
@@ -1449,12 +1450,12 @@ function() {
             el.dataset.wxh = header.width * header.height;
             el.style.order = -el.dataset.log2h;
           });
-          image.getFirstFrame().then(function(imageData) {
-            var canvas = document.createElement('CANVAS');
-            canvas.width = imageData.width;
-            canvas.height = imageData.height;
-            canvas.getContext('2d').putImageData(imageData, 0, 0);
-            el.image.appendChild(canvas);
+          image.getFirstFrame().then(function(imageBlob) {
+            var img = document.createElement('IMG');
+            img.setAttribute('width', imageBlob.width);
+            img.setAttribute('height', imageBlob.height);
+            img.setAttribute('src', URL.createObjectURL(imageBlob));
+            el.image.appendChild(img);
             el.image.style.background = 'transparent';
           });
         }
