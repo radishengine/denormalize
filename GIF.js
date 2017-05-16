@@ -213,7 +213,7 @@ define(function() {
     
     parts.push(oneByte(0x3B)); // terminator
     
-    return new Blob(parts);
+    return new Blob(parts, {type:'image/gif'});
   };
 
 });
