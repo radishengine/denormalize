@@ -157,10 +157,6 @@ define(function() {
       var bufferInt = 0, bufferBits = 0;
       
       function write(code) {
-        while (code >= validCodeBoundary) {
-          codeSize += 1;
-          validCodeBoundary <<= 1;
-        }
         bufferInt |= code << bufferBits;
         if ((bufferBits += codeSize) >= 32) {
           ensure(4);
@@ -198,6 +194,10 @@ define(function() {
         }
         if (nextCode <= LAST_VALID_CODE) {
           codeTable[buffer_k] = nextCode++;
+          if (nextCode >= validCodeBoundary && nextCode <= LAST_VALID_CODE) {
+            codeSize += 1;
+            validCodeBoundary <<= 1;
+          }
         }
         write(codeTable[indexBuffer]);
         indexBuffer = k;
