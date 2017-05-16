@@ -28,13 +28,14 @@ define(function() {
     var defaultTransparent = +pix8s.transparent;
     if (globalPalette) {
       var b = new Uint8Array(globalPalette.buffer, globalPalette.byteOffset, globalPalette.byteLength);
-      var pal = new Uint8Array(3 << Math.ceil(Math.log2(globalPalette.length)));
+      var palSize = 1 << Math.ceil(Math.log2(globalPalette.length));
+      var pal = new Uint8Array(3 * palSize);
       for (var i = 0; i < globalPalette.length; i++) {
         pal[i*3] = b[i*4];
         pal[i*3 + 1] = b[i*4 + 1];
         pal[i*3 + 2] = b[i*4 + 2];
       }
-      logicalScreenDescriptor.setUint8(4, 0x80 | ((Math.log2(pal.length)-1) << 4));
+      logicalScreenDescriptor.setUint8(4, 0x80 | ((Math.log2(palSize)-1) << 4));
       parts.push(pal);
     }
     function pushChunked(extParts) {
