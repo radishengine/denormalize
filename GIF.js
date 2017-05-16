@@ -3,6 +3,7 @@ define(function() {
   'use strict';
   
   const CLEAR_TABLE_MODE = false;
+  const UNCOMPRESSED_MODE = true;
   
   const ONEBYTE_128_255 = (function() {
     var abuf = new ArrayBuffer(128);
@@ -186,8 +187,15 @@ define(function() {
       
       var in_i = 0;
       var indexBuffer = String.fromCharCode(pix8[in_i++]);
+      if (UNCOMPRESSED_MODE) {
+        write(codeTable[indexBuffer], codeSize);
+      }
       while (in_i < pix8.length) {
         var k = String.fromCharCode(pix8[in_i++]);
+        if (UNCOMPRESSED_MODE) {
+          write(codeTable[k], codeSize);
+          continue;
+        }
         var buffer_k = indexBuffer+k;
         if (buffer_k in codeTable) {
           indexBuffer = buffer_k;
@@ -216,7 +224,9 @@ define(function() {
           validCodeBoundary = (1 << codeSize) - 1;
         }
       }
-      write(codeTable[indexBuffer], codeSize);
+      if (!UNCOMPRESSED_MODE) {
+        write(codeTable[indexBuffer], codeSize);
+      }
       write(endCode, codeSize);
       
       flush();
