@@ -103,7 +103,7 @@ define(function() {
       }
       else packed |= (1 << 2);
       graphicControlExtension.setUint8(0, packed);
-      graphicControlExtension.setUint16(1, pix8.duration || pix8s.duration || 100);
+      graphicControlExtension.setUint16(1, pix8.duration || pix8s.duration || 100, true);
       if (!isNaN(transparent)) {
         graphicControlExtension.setUint8(3, transparent);
       }
