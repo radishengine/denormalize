@@ -202,6 +202,7 @@ define(function() {
             }
             codeSize = minimumCodeSize + 1;
             validCodeBoundary = 1 << (codeSize + 1);
+            nextCode = clearCode+2;
           }
           else {
             validCodeBoundary <<= 1;
