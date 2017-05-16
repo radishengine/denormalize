@@ -21,8 +21,10 @@ define(function() {
   GIF.encode = function(globalPalette, pix8s) {
     var logicalScreenDescriptor = new DataView(new ArrayBuffer(7));
     var parts = ['GIF89a', logicalScreenDescriptor];
-    logicalScreenDescriptor.setUint16(0, pix8s.width || pix8s[0].width, true);
-    logicalScreenDescriptor.setUint16(2, pix8s.height || pix8s[0].height, true);
+    var canvasWidth = pix8s.width || pix8s[0].width;
+    var canvasHeight = pix8s.height || pix8s[0].height;
+    logicalScreenDescriptor.setUint16(0, canvasWidth, true);
+    logicalScreenDescriptor.setUint16(2, canvasHeight, true);
     var defaultTransparent = +pix8s.transparent;
     if (globalPalette) {
       var b = new Uint8Array(globalPalette.buffer, globalPalette.byteOffset, globalPalette.byteLength);
@@ -213,7 +215,10 @@ define(function() {
     
     parts.push(oneByte(0x3B)); // terminator
     
-    return new Blob(parts, {type:'image/gif'});
+    return Object.assign(new Blob(parts, {type:'image/gif'}), {
+      width: canvasWidth,
+      height: canvasHeight,
+    });
   };
 
 });
