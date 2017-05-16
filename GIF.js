@@ -70,7 +70,7 @@ define(function() {
         }
         else if (ArrayBuffer.isView(extPart)) {
           buffer = extPart.buffer;
-          byteOffset = extPart.byteLength;
+          byteOffset = extPart.byteOffset;
           byteLength = extPart.byteLength;
         }
         else {
