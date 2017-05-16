@@ -201,6 +201,7 @@ define(function() {
         
         if (UNCOMPRESSED_MODE) {
           write(codeTable[k]);
+          write(clearCode);
           continue;
         }
         
