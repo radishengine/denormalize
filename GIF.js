@@ -167,6 +167,10 @@ define(function() {
           bufferBits -= 32;
           bufferInt = code >>> (codeSize - bufferBits);
         }
+        if (code === ((1 << codeSize)-1) && codeSize < MAX_CODE_SIZE) {
+          codeSize++;
+          validCodeBoundary <<= 1;
+        }
       }
       
       function flush() {
@@ -197,10 +201,6 @@ define(function() {
         }
         write(codeTable[indexBuffer]);
         indexBuffer = k;
-        if (nextCode >= validCodeBoundary && nextCode <= LAST_VALID_CODE) {
-          codeSize += 1;
-          validCodeBoundary <<= 1;
-        }
       }
       
       write(codeTable[indexBuffer]);
