@@ -195,8 +195,8 @@ define(function() {
         write(codeTable[indexBuffer], codeSize);
         indexBuffer = k;
         if (nextCode >= validCodeBoundary) {
-          if (++codeSize >= MAX_CODE_SIZE) {
-            write(clearCode, codeSize);
+          if (++codeSize > MAX_CODE_SIZE) {
+            write(clearCode, MAX_CODE_SIZE);
             for (k in codeTable) {
               if (k.length !== 1) delete codeTable[k];
             }
