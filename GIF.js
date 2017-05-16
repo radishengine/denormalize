@@ -187,7 +187,10 @@ define(function() {
       while (in_i < pix8.length) {
         var k = String.fromCharCode(pix8[in_i++]);
         var buffer_k = indexBuffer+k;
-        if (buffer_k in codeTable) continue;
+        if (buffer_k in codeTable) {
+          indexBuffer = buffer_k;
+          continue;
+        }
         codeTable[buffer_k] = nextCode++;
         write(codeTable[indexBuffer], codeSize);
         indexBuffer = k;
