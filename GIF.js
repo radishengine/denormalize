@@ -3,7 +3,7 @@ define(function() {
   'use strict';
   
   const CLEAR_TABLE_MODE = false;
-  const UNCOMPRESSED_MODE = true;
+  const UNCOMPRESSED_MODE = false; // true;
   
   const ONEBYTE_128_255 = (function() {
     var abuf = new ArrayBuffer(128);
@@ -137,7 +137,7 @@ define(function() {
       var endCode = clearCode+1;
       var nextCode = clearCode+2;
       var codeSize = minimumCodeSize+1;
-      var validCodeBoundary = (1 << codeSize) - 1;
+      var validCodeBoundary = 1 << codeSize;
       var codeTable = Object.create(null);
       for (var i = 0; i < clearCode; i++) {
         codeTable[String.fromCharCode(i)] = i;
@@ -202,11 +202,31 @@ define(function() {
           indexBuffer = buffer_k;
           continue;
         }
+        /*
+        if (nextCode < validCodeBoundary) {
+          codeTable[buffer_k] = nextCode++;
+        }
+        */
+        if (nextCode >= validCodeBoundary) {
+          if (codeSize < MAX_CODE_SIZE) {
+            codeSize++;
+          }
+          else if (CLEAR_TABLE_MODE) {
+            write(clearCode, MAX_CODE_SIZE);
+            for (k in codeTable) {
+              if (k.length !== 1) delete codeTable[k];
+            }
+            codeSize = minimumCodeSize + 1;
+            nextCode = clearCode+2;
+          }
+          validCodeBoundary = 1 << codeSize;
+        }
         if (nextCode < validCodeBoundary) {
           codeTable[buffer_k] = nextCode++;
         }
         write(codeTable[indexBuffer], codeSize);
         indexBuffer = k;
+        /*
         if (nextCode >= validCodeBoundary) {
           if (codeSize < MAX_CODE_SIZE) {
             codeSize++;
@@ -222,8 +242,9 @@ define(function() {
             codeSize = minimumCodeSize + 1;
             nextCode = clearCode+2;
           }
-          validCodeBoundary = (1 << codeSize) - 1;
+          validCodeBoundary = 1 << codeSize;
         }
+        */
       }
       if (!UNCOMPRESSED_MODE) {
         write(codeTable[indexBuffer], codeSize);
