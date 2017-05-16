@@ -136,7 +136,7 @@ define(function() {
       var endCode = clearCode+1;
       var nextCode = clearCode+2;
       var codeSize = minimumCodeSize+1;
-      var validCodeBoundary = 1 << codeSize;
+      var validCodeBoundary = (1 << codeSize) - 1;
       var codeTable = Object.create(null);
       for (var i = 0; i < clearCode; i++) {
         codeTable[String.fromCharCode(i)] = i;
@@ -206,12 +206,9 @@ define(function() {
               if (k.length !== 1) delete codeTable[k];
             }
             codeSize = minimumCodeSize + 1;
-            validCodeBoundary = 1 << codeSize;
             nextCode = clearCode+2;
           }
-          else {
-            validCodeBoundary <<= 1;
-          }
+          validCodeBoundary = (1 << codeSize) - 1;
         }
       }
       write(codeTable[indexBuffer], codeSize);
