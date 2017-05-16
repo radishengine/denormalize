@@ -139,9 +139,6 @@ define(function() {
       for (var i = 0; i < clearCode; i++) {
         codeTable[String.fromCharCode(i)] = i;
       }
-      function getCode(str) {
-        if (str in codeTable) return codeTable[str];
-      }
       
       var lzw = new Uint8Array(1 << (Math.ceil(Math.log2(pix8.length))));
       var pos = 0;
