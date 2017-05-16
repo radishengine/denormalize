@@ -194,6 +194,7 @@ define(function() {
         var k = String.fromCharCode(pix8[in_i++]);
         if (UNCOMPRESSED_MODE) {
           write(codeTable[k], codeSize);
+          write(clearCode, codeSize);
           continue;
         }
         var buffer_k = indexBuffer+k;
