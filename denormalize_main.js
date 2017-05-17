@@ -1198,15 +1198,11 @@ function(GIF) {
         return blob.readBuffered(
           self.offset + header.byteLength,
           self.offset + header.byteLength + header.width * header.height)
-        .then(function(bytes) {
-          var rotated = new Uint8Array(header.width * header.height);
-          rotated.width = header.width;
-          rotated.height = header.height;
-          const w = header.width, h = header.height;
-          for (var i = 0; i < bytes.length; i++) {
-            rotated[i] = bytes[(i % w)*h + ((i / w)|0)];
-          }
-          return rotated;
+        .then(function(data) {
+          data = new Uint8Array(data);
+          data.width = header.width;
+          data.height = header.height;
+          return data;
         });
       });
     },
@@ -1317,6 +1313,15 @@ function(GIF) {
     getImage: function() {
       var palette = this.palette;
       return this.getAllFrames().then(function(frames) {
+        var rotated = new Uint8Array(frames[0].length);
+        for (var i_frame = 0; i_frame < frames.length; i_frame++) {
+          var frame = frames[i_frame];
+          var w = frame.width, h = frame.height;
+          for (var i = 0; i < frame.length; i++) {
+            rotated[i] = frame[(i % w)*h + ((i / w)|0)];
+          }
+          frame.set(rotated);
+        }
         return GIF.encode(palette, frames);
       });
     },
