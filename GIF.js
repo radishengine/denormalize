@@ -94,6 +94,16 @@ define(function() {
       pushChunked(data);
     }
     
+    if (pix8s.length > 1) {
+      parts.push(
+        oneByte(0x21), oneByte(0xFF),
+        oneByte("NETSCAPE2.0".length), "NETSCAPE2.0",
+        oneByte(3), oneByte(1),
+          oneByte(0), oneByte(0),
+        oneByte(0)
+      );
+    }
+    
     for (var i_pix8 = 0; i_pix8 < pix8s.length; i_pix8++) {
       var pix8 = pix8s[i_pix8];
       var graphicControlExtension = new DataView(new ArrayBuffer(4));
