@@ -1273,7 +1273,7 @@ function(GIF) {
             }
             if (code > 0x80) {
               if (code === 0xFF && data[in_i] > 0x80) {
-                out_i += data[in_i++];
+                out_i += data[in_i++] - 1;
                 continue;
               }
               out_i += code - 0x80;
