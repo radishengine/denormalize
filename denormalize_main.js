@@ -1231,7 +1231,7 @@ function(GIF) {
           if (offsets[i+1] === 0) {
             var n = 1;
             do { duration += ms; } while (offsets[++n + i] === 0);
-            offsets.splice(offsets, i+1, n);
+            offsets.splice(i+1, n);
           }
           durations.push(duration);
         }
