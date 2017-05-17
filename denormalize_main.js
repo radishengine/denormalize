@@ -1245,6 +1245,8 @@ function(GIF) {
           var frame = frames[frame_i] = new Uint8Array(frames[frame_i-1]);
           frame.duration = durations[frame_i];
           frame.replace = true;
+          frame.width = frames[0].width;
+          frame.height = frames[0].height;
           var out_i = 0;
           function decode(b) {
             offset++;
