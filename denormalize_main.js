@@ -1102,6 +1102,22 @@ function(GIF) {
     get speed() {
       return this.dv.getUint8(11, true);
     },
+    get approximateDuration() {
+      switch (this.speed) {
+        case 0x02: return 70;
+        case 0x03: return 57;
+        case 0x04: return 100;
+        case 0x06: return 128;
+        case 0x07: return 170;
+        case 0x08: return 186;
+        case 0x0A: return 214;
+        case 0x0E: return 270;
+        case 0x10: return 57;
+        default:
+          console.warn('unknown animation speed: ' + this.speed);
+          return 100;
+      }
+    },
     get deltaOffsets() {
       var list = new Array((this.byteLength - 20)/4);
       for (var i = 0; i < list.length; i++) {
@@ -1175,7 +1191,6 @@ function(GIF) {
     },
     getFirstFrame: function() {
       var self = this, blob = this.blob;
-      var palette = this.das.opaquePalette; // this.kind === 'sprite' ? this.das.transparentPalette : this.das.opaquePalette;
       return this.retrievedHeader.then(function(header) {
         return blob.readBuffered(
           self.offset + header.byteLength,
@@ -1188,8 +1203,50 @@ function(GIF) {
           for (var i = 0; i < bytes.length; i++) {
             rotated[i] = bytes[(i % w)*h + ((i / w)|0)];
           }
-          return GIF.encode(palette, [rotated]);
+          return rotated;
         });
+      });
+    },
+    get palette() {
+      return this.das.opaquePalette; // this.kind === 'sprite' ? this.das.transparentPalette : this.das.opaquePalette;
+    },
+    getAllFrames: function() {
+      var palette = this.palette;
+      return Promise.all([this.retrievedHeader, this.getFirstFrame()])
+      .then(function(values) {
+        var header = values[0], frames = [values[1]];
+        if (!header.isAnimated) return frames;
+        var ms = header.animation.approximateDuration;
+        var offsets = header.animation.deltaOffsets;
+        var i;
+        for (i = offsets.length; i >= 0; i--) {
+          if (offsets[i] !== 0) break;
+        }
+        if (i < 0) return frames;
+        offsets = offsets.slice(i); // removing final frame (restores the first) and any trailing zeros
+        var durations = [ms];
+        for (i = 0; offsets[i] === 0; i++) {
+          durations[0] += ms;
+        }
+        if (i > 0) offsets = offsets.slice(i);
+        while (++i < offsets.length) {
+          var duration = ms;
+          var j = i;
+          while (offsets[j] === 0) {
+            duration += ms;
+            if (++j >= offsets.length) break;
+          }
+          durations.push(duration);
+          if (j > i) offsets.splice(i, j-i);
+        }
+        console.log(offsets, durations);
+        return frames;
+      });
+    },
+    getImage: function() {
+      var palette = this.palette;
+      return this.getAllFrames().then(function(frames) {
+        return GIF.encode(palette, frames);
       });
     },
   };
@@ -1451,7 +1508,7 @@ function(GIF) {
             el.dataset.wxh = header.width * header.height;
             el.style.order = el.dataset.log2h;
           });
-          image.getFirstFrame().then(function(imageBlob) {
+          image.getImage().then(function(imageBlob) {
             var img = document.createElement('IMG');
             img.setAttribute('width', imageBlob.width);
             img.setAttribute('height', imageBlob.height);
