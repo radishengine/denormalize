@@ -1295,7 +1295,12 @@ function(GIF) {
               return blob.readBuffered(offset, offset+b[0]+1)
               .then(function(b2) {
                 var copy = b2.subarray(0, b2.length-1);
-                frame.set(copy, out_i);
+                if (out_i+copy.length <= copy.length) {
+                  frame.set(copy, out_i);
+                }
+                else {
+                  console.warn('anim delta: pixel copy out of bounds');
+                }
                 out_i += copy.length;
                 offset += copy.length;
                 return b2.subarray(copy.length);
