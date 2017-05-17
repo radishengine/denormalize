@@ -1224,7 +1224,7 @@ function(GIF) {
         }
         if (i < 0) return frames;
         offsets = offsets.slice(0, i); // removing final frame (restores the first) and any trailing zeros
-        offsets.splice(0, i, null); // null: placeholder "offset" for non-delta frame
+        offsets.splice(0, 0, null); // null: placeholder "offset" for non-delta frame
         var durations = [];
         for (i = 0; i < offsets.length; i++) {
           var duration = ms;
