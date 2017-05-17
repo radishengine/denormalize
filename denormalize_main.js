@@ -1105,14 +1105,14 @@ function(GIF) {
     get approximateDuration() {
       switch (this.speed) {
         case 0x02: return 70;
-        case 0x03: return 57;
+        case 0x03: return 60; // 57;
         case 0x04: return 100;
-        case 0x06: return 128;
+        case 0x06: return 130; // 128;
         case 0x07: return 170;
-        case 0x08: return 186;
-        case 0x0A: return 214;
+        case 0x08: return 190; // 186;
+        case 0x0A: return 210; // 214;
         case 0x0E: return 270;
-        case 0x10: return 57;
+        case 0x10: return 60; // 57;
         default:
           console.warn('unknown animation speed: ' + this.speed);
           return 100;
