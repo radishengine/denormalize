@@ -1555,6 +1555,11 @@ function(GIF) {
           image.retrievedHeader.then(function(header) {
             el.image.style.width = header.width + 'px';
             el.image.style.height = header.height + 'px';
+            var flags = [];
+            for (var flag = 1; flag; flag <<= 1) {
+              if (header.flags & flag) flags.push('0x'+flag.toString(16));
+            }
+            el.title += '\nFlags: ' + flags.join(', ');
             el.dataset.width = header.width;
             el.dataset.height = header.height;
             el.dataset.log2h = Math.ceil(Math.log2(header.height));
