@@ -1243,7 +1243,7 @@ function(GIF) {
           if (frame_i >= frames.length) return frames;
           var offset = baseOffset + offsets[frame_i];
           var frame = frames[frame_i] = new Uint8Array(frames[frame_i-1]);
-          frame.duration = durations[i];
+          frame.duration = durations[frame_i];
           frame.replace = true;
           var out_i = 0;
           function decode(b) {
