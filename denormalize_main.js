@@ -1397,12 +1397,12 @@ function(GIF) {
             var option = document.createElement('OPTION');
             option.value = '+' + options[i].value;
             option.text = String.fromCharCode(0x2191) + ' ' + options[i].text;
+            if (options[i].selected) option.selected = true;
             subsection.sorter.appendChild(option);
 
             var option = document.createElement('OPTION');
             option.value = '-' + options[i].value;
             option.text = String.fromCharCode(0x2193) + ' ' + options[i].text;
-            if (options[i].selected) option.selected = true;
             subsection.sorter.appendChild(option);
           }
           subsection.sorter.onchange = function(e) {
@@ -1449,7 +1449,7 @@ function(GIF) {
             el.dataset.height = header.height;
             el.dataset.log2h = Math.ceil(Math.log2(header.height));
             el.dataset.wxh = header.width * header.height;
-            el.style.order = -el.dataset.log2h;
+            el.style.order = el.dataset.log2h;
           });
           image.getFirstFrame().then(function(imageBlob) {
             var img = document.createElement('IMG');
