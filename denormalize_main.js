@@ -1095,7 +1095,7 @@ function(GIF) {
     get byteLength() {
       return this.dv.getUint16(4, true);
     },
-    get unknown2() {
+    get frameCount() {
       return this.dv.getUint16(6, true);
     },
     // 3 bytes always 0xFFFFFF
@@ -1119,7 +1119,7 @@ function(GIF) {
       }
     },
     get deltaOffsets() {
-      var list = new Array((this.byteLength - 20)/4);
+      var list = new Array(this.frameCount);
       for (var i = 0; i < list.length; i++) {
         list[i] = this.dv.getUint32(12 + i*4, true);
         if (list[i] !== 0) list[i] += 4;
