@@ -39,6 +39,7 @@ function(GIF) {
       fr.onerror = function() {
         reject(this.error);
       };
+      console.info('readBuffered', self, bufferStart, bufferEnd);
       fr.readAsArrayBuffer(self.slice(bufferStart, bufferEnd));
     }), {
       bufferOffset: bufferStart,
