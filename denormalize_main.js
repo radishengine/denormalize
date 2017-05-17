@@ -1560,6 +1560,7 @@ function(GIF) {
               if (header.flags & flag) flags.push('0x'+flag.toString(16));
             }
             el.title += '\nFlags: ' + flags.join(', ');
+            el.title += '\nUnk: ' + image.unknown.toString(16);
             el.dataset.width = header.width;
             el.dataset.height = header.height;
             el.dataset.log2h = Math.ceil(Math.log2(header.height));
