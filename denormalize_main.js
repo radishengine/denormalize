@@ -1219,7 +1219,7 @@ function(GIF) {
         var ms = header.animation.approximateDuration;
         var offsets = header.animation.deltaOffsets;
         var i;
-        for (i = offsets.length; i >= 0; i--) {
+        for (i = offsets.length-1; i >= 0; i--) {
           if (offsets[i] !== 0) break;
         }
         if (i < 0) return frames;
