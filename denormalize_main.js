@@ -1223,7 +1223,7 @@ function(GIF) {
           if (offsets[i] !== 0) break;
         }
         if (i < 0) return frames;
-        offsets = offsets.slice(i); // removing final frame (restores the first) and any trailing zeros
+        offsets = offsets.slice(0, i); // removing final frame (restores the first) and any trailing zeros
         var durations = [ms];
         for (i = 0; offsets[i] === 0; i++) {
           durations[0] += ms;
