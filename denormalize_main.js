@@ -1224,21 +1224,16 @@ function(GIF) {
         }
         if (i < 0) return frames;
         offsets = offsets.slice(0, i); // removing final frame (restores the first) and any trailing zeros
-        var durations = [ms];
-        for (i = 0; offsets[i] === 0; i++) {
-          durations[0] += ms;
-        }
         offsets.splice(0, i, null); // null: placeholder "offset" for non-delta frame
-        i = 0;
-        while (++i < offsets.length) {
+        var durations = [];
+        for (i = 0; i < offsets.length; i++) {
           var duration = ms;
-          var j = i;
-          while (offsets[j] === 0) {
-            duration += ms;
-            if (++j >= offsets.length) break;
+          if (offsets[i+1] === 0) {
+            var n = 1;
+            do { duration += ms; } while (offsets[++n + i] === 0);
+            offsets.splice(offsets, i+1, n);
           }
           durations.push(duration);
-          if (j > i) offsets.splice(i, j-i);
         }
         console.log(offsets, durations);
         return frames;
