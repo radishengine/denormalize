@@ -1295,7 +1295,7 @@ function(GIF) {
               return blob.readBuffered(offset, offset+b[0]+1)
               .then(function(b2) {
                 var copy = b2.subarray(0, b2.length-1);
-                if (out_i+copy.length <= copy.length) {
+                if (out_i+copy.length <= frame.length) {
                   frame.set(copy, out_i);
                 }
                 else {
