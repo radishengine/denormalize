@@ -1284,19 +1284,21 @@ function(GIF) {
                 if (b[0] === 0xFF && b2[0] > 0x80) {
                   out_i += b2[0] - 1;
                   offset++;
-                  return blob.readBuffered(offset, offset+1).then(decode);
+                  return blob.readBuffered(offset, offset+1);
                 }
                 out_i += b[0] - 0x80;
-                return decode(b2);
-              });
+                return b2;
+              })
+              .then(decode);
             }
             else {
               return blob.readBuffered(offset, offset+b[0]+1)
-              .then(function(copy) {
-                frame.set(copy.subarray(0, copy.length-1), out_i);
+              .then(function(b2) {
+                var copy = b2.subarray(0, b2.length-1);
+                frame.set(copy, out_i);
                 out_i += copy.length;
                 offset += copy.length;
-                return copy.subarray(copy.length-1);
+                return b2.subarray(copy.length);
               })
               .then(decode);
             }
