@@ -1491,16 +1491,20 @@ function(GIF) {
     }
   };
   
-  dragdrop.onclick = function() {
+  dragdrop.onclick = function(e) {
     var upload = document.createElement('INPUT');
     upload.setAttribute('type', 'file');
     upload.setAttribute('multiple', 'multiple');
     upload.setAttribute('accept', '.gdv,.mgl,.das');
+    upload.style.display = 'none';
     upload.onchange = function() {
       for (var i = this.files.length - 1; i >= 0; i--) {
         onfile(this.files[i]);
       }
       this.parentNode.removeChild(this);
+    };
+    upload.onclick = function(e) {
+      e.stopPropagation();
     };
     this.appendChild(upload);
     upload.click();
