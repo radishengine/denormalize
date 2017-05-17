@@ -1089,7 +1089,7 @@ function(GIF) {
     this.dv = new DataView(buffer, byteOffset, byteLength);
   }
   DASAnimation.prototype = {
-    get unknown1() {
+    get totalByteLength() {
       return this.dv.getUint32(0, true);
     },
     get byteLength() {
@@ -1176,41 +1176,51 @@ function(GIF) {
     get index() {
       return (this.nameRecord.index & 0xfff);
     },
-    get retrievedHeader() {
-      var self = this, blob = this.blob, header;
-      var promise = blob.readBuffered(this.offset, Math.min(blob.size, this.offset + 14))
+    get retrievedData() {
+      var blob = this.blob, offset = this.offset;
+      // 10 bytes is just enough to get the total size
+      var promise = blob.readBuffered(this.offset, Math.min(blob.size, offset + 10))
       .then(function(headerBytes) {
         var tempHeader = new DASImageHeader(headerBytes.buffer, headerBytes.byteOffset, headerBytes.byteLength);
-        return blob.readBuffered(self.offset, self.offset + tempHeader.byteLength);
-      })
-      .then(function(headerBytes) {
-        return new DASImageHeader(headerBytes.buffer, headerBytes.byteOffset, headerBytes.byteLength);
+        if (tempHeader.isAnimated) {
+          return blob.readBuffered(offset, offset + tempHeader.animation.totalByteLength);
+        }
+        else {
+          return blob.readBuffered(offset, offset + tempHeader.byteLength + tempHeader.width * tempHeader.height);
+        }
+      });
+      Object.defineProperty(this, 'retrievedData', {value:promise, enumerable:true});
+      return promise;
+    },
+    get retrievedHeader() {
+      var promise = this.retrievedData.then(function(data) {
+        return new DASImageHeader(data.buffer, data.byteOffset, data.byteLength);
       });
       Object.defineProperty(this, 'retrievedHeader', {value:promise, enumerable:true});
       return promise;
     },
     getFirstFrame: function() {
-      var self = this, blob = this.blob;
-      return this.retrievedHeader.then(function(header) {
-        return blob.readBuffered(
-          self.offset + header.byteLength,
-          self.offset + header.byteLength + header.width * header.height)
-        .then(function(data) {
-          data = new Uint8Array(data);
-          data.width = header.width;
-          data.height = header.height;
-          return data;
-        });
+      return this.retrievedData.then(function(data) {
+        var header = new DASImageHeader(
+          data.buffer,
+          data.byteOffset,
+          data.byteLength);
+        return Object.assign(
+          // cloned so it can be rotated in-place
+          new Uint8Array(data.subarray(
+            header.byteLength,
+            header.byteLength + header.width * header.height)),
+          {width:header.width, height:header.height});
       });
     },
     get palette() {
       return this.das.opaquePalette; // this.kind === 'sprite' ? this.das.transparentPalette : this.das.opaquePalette;
     },
     getAllFrames: function() {
-      var palette = this.palette, baseOffset = this.offset, blob = this.blob;
-      return Promise.all([this.retrievedHeader, this.getFirstFrame()])
+      return Promise.all([this.retrievedData, this.getFirstFrame()])
       .then(function(values) {
-        var header = values[0], frames = [values[1]];
+        var data = values[0], frames = [values[1]];
+        var header = new DASImageHeader(data.buffer, data.byteOffset, data.byteLength);
         if (!header.isAnimated) return frames;
         var ms = header.animation.approximateDuration;
         var offsets = header.animation.deltaOffsets;
@@ -1232,79 +1242,49 @@ function(GIF) {
           durations.push(duration);
         }
         frames.length = durations.length;
-        function nextDelta(frame_i) {
-          if (frame_i >= frames.length) return frames;
-          var offset = baseOffset + offsets[frame_i];
+        frames[0].duration = durations[0];
+        var dv = new DataView(data.buffer, data.byteOffset, data.byteLength);
+        for (var frame_i = 1; frame_i < frames.length; frame_i++) {
+          var in_i = offsets[frame_i], out_i = 0;
           var frame = frames[frame_i] = new Uint8Array(frames[frame_i-1]);
           frame.duration = durations[frame_i];
           frame.replace = true;
           frame.width = frames[0].width;
           frame.height = frames[0].height;
-          var out_i = 0;
-          function decode(b) {
-            offset++;
-            if (b[0] === 0) {
-              return blob.readBuffered(offset, offset+3)
-              .then(function(b) {
-                var repCount = b[0], repPixel = b[1];
+          for (;;) {
+            var code = data[in_i++];
+            if (code === 0) {
+              var repCount = data[in_i++];
+              var repPixel = data[in_i++];
+              while (repCount--) frame[out_i++] = repPixel;
+              continue;
+            }
+            if (code === 0x80) {
+              var param = dv.getUint16(in_i, true);
+              in_i += 2;
+              if (param === 0) break;
+              if ((param & 0xC000) === 0xC000) {
+                var repCount = param & 0x3FFF, repPixel = data[in_i++];
                 while (repCount--) frame[out_i++] = repPixel;
-                offset += 2;
-                return b.subarray(2);
-              })
-              .then(decode);
+                continue;
+              }
+              out_i += param;
+              continue;
             }
-            else if (b[0] === 0x80) {
-              return blob.readBuffered(offset, offset+3)
-              .then(function(b) {
-                var param = b[0] | (b[1] << 8);
-                if (param === 0) {
-                  return nextDelta(frame_i+1);
-                }
-                if ((param & 0xC000) === 0xC000) {
-                  var repCount = param & 0x3FFF, repPixel = b[2];
-                  while (repCount--) frame[out_i++] = repPixel;
-                  offset += 3;
-                  return blob.readBuffered(offset, offset+1).then(decode);
-                }
-                out_i += param;
-                offset += 2;
-                return decode(b.subarray(2));
-              });
+            if (code > 0x80) {
+              if (code === 0xFF && data[in_i] > 0x80) {
+                out_i += data[in_i++];
+                continue;
+              }
+              out_i += code - 0x80;
+              continue;
             }
-            else if (b[0] > 0x80) {
-              return blob.readBuffered(offset, offset + 1)
-              .then(function(b2) {
-                if (b[0] === 0xFF && b2[0] > 0x80) {
-                  out_i += b2[0] - 1;
-                  offset++;
-                  return blob.readBuffered(offset, offset+1);
-                }
-                out_i += b[0] - 0x80;
-                return b2;
-              })
-              .then(decode);
-            }
-            else {
-              return blob.readBuffered(offset, offset+b[0]+1)
-              .then(function(b2) {
-                var copy = b2.subarray(0, b2.length-1);
-                if (out_i+copy.length <= frame.length) {
-                  frame.set(copy, out_i);
-                }
-                else {
-                  console.warn('anim delta: pixel copy out of bounds');
-                }
-                out_i += copy.length;
-                offset += copy.length;
-                return b2.subarray(copy.length);
-              })
-              .then(decode);
-            }
+            frame.set(data.subarray(in_i, in_i + code), out_i);
+            in_i += code;
+            out_i += code;
           }
-          return blob.readBuffered(offset, offset+1).then(decode);
         }
-        frames[0].duration = durations[0];
-        return nextDelta(1);
+        return frames;
       });
     },
     getImage: function() {
