@@ -1176,6 +1176,9 @@ function(GIF) {
     get index() {
       return (this.nameRecord.index & 0xfff);
     },
+    get animationBaseOffset() {
+      return this.offset + 10;
+    },
     get retrievedHeader() {
       var self = this, blob = this.blob, header;
       var promise = blob.readBuffered(this.offset, Math.min(blob.size, this.offset + 14))
@@ -1211,7 +1214,7 @@ function(GIF) {
       return this.das.opaquePalette; // this.kind === 'sprite' ? this.das.transparentPalette : this.das.opaquePalette;
     },
     getAllFrames: function() {
-      var palette = this.palette;
+      var palette = this.palette, baseOffset = this.animationBaseOffset, blob = this.blob;
       return Promise.all([this.retrievedHeader, this.getFirstFrame()])
       .then(function(values) {
         var header = values[0], frames = [values[1]];
@@ -1235,8 +1238,71 @@ function(GIF) {
           }
           durations.push(duration);
         }
-        console.log(offsets, durations);
-        return frames;
+        frames.length = durations.length;
+        function nextDelta(frame_i) {
+          if (frame_i >= frames.length) return frames;
+          var offset = baseOffset + offsets[frame_i];
+          var frame = frames[frame_i] = new Uint8Array(frames[frame_i-1]);
+          frame.duration = durations[i];
+          frame.replace = true;
+          var out_i = 0;
+          function decode(b) {
+            offset++;
+            if (b[0] === 0) {
+              return blob.readBuffered(offset, offset+3)
+              .then(function(b) {
+                var repCount = b[0], repPixel = b[1];
+                while (repCount--) frame[out_i++] = repPixel;
+                offset += 2;
+                return b.subarray(2);
+              })
+              .then(decode);
+            }
+            else if (b[0] === 0x80) {
+              return blob.readBuffered(offset, offset+3)
+              .then(function(b) {
+                var param = b[0] | (b[1] << 8);
+                if (param === 0) {
+                  return nextDelta(frame_i+1);
+                }
+                if ((param & 0xC000) === 0xC000) {
+                  var repCount = param & 0x3FFF, repPixel = b[2];
+                  while (repCount--) frame[out_i++] = repPixel;
+                  offset += 3;
+                  return blob.readBuffered(offset, offset+1).then(decode);
+                }
+                out_i += param;
+                offset += 2;
+                return decode(b.subarray(2));
+              });
+            }
+            else if (b[0] > 0x80) {
+              return blob.readBuffered(offset, offset + 1)
+              .then(function(b2) {
+                if (b[0] === 0xFF && b[2] > 0x80) {
+                  out_i += b2[0] - 1;
+                  offset += 2;
+                  return blob.readBuffered(offset, offset+1).then(decode);
+                }
+                out_i += b[0] - 0x80;
+                offset++;
+                return decode(b.subarray(1));
+              });
+            }
+            else {
+              return blob.readBuffered(offset, offset+b[0]+1)
+              .then(function(copy) {
+                frame.set(copy.subarray(0, copy.length-1), out_i);
+                out_i += copy.length;
+                offset += copy.length;
+                return copy.subarray(copy.length-1);
+              })
+              .then(decode);
+            }
+          }
+          return blob.readBuffered(offset, offset+1).then(decode);
+        }
+        return nextDelta(1);
       });
     },
     getImage: function() {
