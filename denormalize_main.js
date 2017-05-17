@@ -1302,6 +1302,7 @@ function(GIF) {
           }
           return blob.readBuffered(offset, offset+1).then(decode);
         }
+        frames[0].duration = durations[0];
         return nextDelta(1);
       });
     },
