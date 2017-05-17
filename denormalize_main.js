@@ -1176,9 +1176,6 @@ function(GIF) {
     get index() {
       return (this.nameRecord.index & 0xfff);
     },
-    get animationBaseOffset() {
-      return this.offset + 10;
-    },
     get retrievedHeader() {
       var self = this, blob = this.blob, header;
       var promise = blob.readBuffered(this.offset, Math.min(blob.size, this.offset + 14))
@@ -1210,7 +1207,7 @@ function(GIF) {
       return this.das.opaquePalette; // this.kind === 'sprite' ? this.das.transparentPalette : this.das.opaquePalette;
     },
     getAllFrames: function() {
-      var palette = this.palette, baseOffset = this.animationBaseOffset, blob = this.blob;
+      var palette = this.palette, baseOffset = this.offset, blob = this.blob;
       return Promise.all([this.retrievedHeader, this.getFirstFrame()])
       .then(function(values) {
         var header = values[0], frames = [values[1]];
