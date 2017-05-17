@@ -1121,7 +1121,8 @@ function(GIF) {
     get deltaOffsets() {
       var list = new Array(this.frameCount);
       for (var i = 0; i < list.length; i++) {
-        list[i] = this.dv.getUint32(12 + i*4, true);
+        var offset = this.dv.getUint32(12 + i*4, true);
+        list[i] = offset && offset-10;
       }
       Object.defineProperty(this, 'deltaOffsets', {value:list, enumerable:true});
       return list;
