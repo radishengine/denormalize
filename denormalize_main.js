@@ -1283,11 +1283,10 @@ function(GIF) {
               .then(function(b2) {
                 if (b[0] === 0xFF && b2[0] > 0x80) {
                   out_i += b2[0] - 1;
-                  offset += 2;
+                  offset++;
                   return blob.readBuffered(offset, offset+1).then(decode);
                 }
                 out_i += b[0] - 0x80;
-                offset++;
                 return decode(b2);
               });
             }
