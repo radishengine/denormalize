@@ -7,8 +7,8 @@ define(function() {
   const ONEBYTE_128_255 = (function() {
     var abuf = new ArrayBuffer(128);
     var arrays = new Array(128);
-    for (var i = 0; i < 128; i++) {
-      (arrays[i] = new Uint8Array(abuf, i, 1))[0] = 128 + i;
+    for (var i_arr = 0; i_arr < 128; i_arr++) {
+      (arrays[i_arr] = new Uint8Array(abuf, i_arr, 1))[0] = 128 + i_arr;
     }
     return arrays;
   })();
@@ -32,17 +32,17 @@ define(function() {
       var b = new Uint8Array(globalPalette.buffer, globalPalette.byteOffset, globalPalette.byteLength);
       var palSize = 1 << Math.ceil(Math.log2(globalPalette.length));
       var pal = new Uint8Array(3 * palSize);
-      for (var i = 0; i < globalPalette.length; i++) {
-        pal[i*3] = b[i*4];
-        pal[i*3 + 1] = b[i*4 + 1];
-        pal[i*3 + 2] = b[i*4 + 2];
+      for (var i_col = 0; i_col < globalPalette.length; i_col++) {
+        pal[i_col*3] = b[i_col*4];
+        pal[i_col*3 + 1] = b[i_col*4 + 1];
+        pal[i_col*3 + 2] = b[i_col*4 + 2];
       }
       logicalScreenDescriptor.setUint8(4, 0x80 | (Math.log2(palSize)-1));
       parts.push(pal);
     }
     function pushChunked(extParts) {
-      for (var i = 0; i < extParts.length; i++) {
-        var extPart = extParts[i];
+      for (var i_part = 0; i_part < extParts.length; i_part++) {
+        var extPart = extParts[i_part];
         if (extPart instanceof Blob) {
           while (extPart.size > 255) {
             parts.push(oneByte(255), extPart.slice(0, 255));
@@ -94,8 +94,8 @@ define(function() {
       pushChunked(data);
     }
     
-    for (var i = 0; i < pix8s.length; i++) {
-      var pix8 = pix8s[i];
+    for (var i_pix8 = 0; i_pix8 < pix8s.length; i_pix8++) {
+      var pix8 = pix8s[i_pix8];
       var graphicControlExtension = new DataView(new ArrayBuffer(4));
       var localPalette = pix8.palette;
       var transparent = ('transparent' in pix8) ? +pix8.transparent : defaultTransparent;
@@ -122,10 +122,10 @@ define(function() {
         var pal = new Uint8Array(Math.pow(2, Math.ceil(Math.log2(localPalette.length))));
         imageDescriptor.setUint8(9, 0x80 | (Math.log2(pal.length)-1));
         var b = new Uint8Array(localPalette.buffer, localPalette.byteOffset, localPalette.byteLength);
-        for (var i = 0; i < localPalette.length; i++) {
-          pal[i*3] = b[i*4];
-          pal[i*3 + 1] = b[i*4 + 1];
-          pal[i*3 + 2] = b[i*4 + 2];
+        for (var i_col = 0; i_col < localPalette.length; i_col++) {
+          pal[i_col*3] = b[i_col*4];
+          pal[i_col*3 + 1] = b[i_col*4 + 1];
+          pal[i_col*3 + 2] = b[i_col*4 + 2];
         }
         parts.push(pal);
       }
@@ -139,8 +139,8 @@ define(function() {
       var codeSize = minimumCodeSize+1;
       var validCodeBoundary = 1 << codeSize;
       var codeTable = Object.create(null);
-      for (var i = 0; i < clearCode; i++) {
-        codeTable[String.fromCharCode(i)] = i;
+      for (var i_code = 0; i_code < clearCode; i_code++) {
+        codeTable[String.fromCharCode(i_code)] = i_code;
       }
       
       var lzw = new Uint8Array(1 << (Math.ceil(Math.log2(pix8.length))));
