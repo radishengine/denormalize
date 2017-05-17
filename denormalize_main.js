@@ -1491,4 +1491,19 @@ function(GIF) {
     }
   };
   
+  dragdrop.onclick = function() {
+    var upload = document.createElement('INPUT');
+    upload.setAttribute('type', 'file');
+    upload.setAttribute('multiple', 'multiple');
+    upload.setAttribute('accept', '.gdv,.mgl,.das');
+    upload.onchange = function() {
+      for (var i = this.files.length - 1; i >= 0; i--) {
+        onfile(this.files[i]);
+      }
+      this.parentNode.removeChild(this);
+    };
+    this.appendChild(upload);
+    upload.click();
+  };
+  
 });
