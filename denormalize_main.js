@@ -1228,7 +1228,8 @@ function(GIF) {
         for (i = 0; offsets[i] === 0; i++) {
           durations[0] += ms;
         }
-        if (i > 0) offsets = offsets.slice(i);
+        offsets.splice(0, i, null); // null: placeholder "offset" for non-delta frame
+        i = 0;
         while (++i < offsets.length) {
           var duration = ms;
           var j = i;
