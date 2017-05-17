@@ -117,9 +117,15 @@
         box-shadow: 2px 2px 0 white inset, 4px 4px 5px rgba(0,0,0,0.2) inset;
       }
     }
+    .dragdrop {
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
-  <div id='dragdrop'>Drag &amp; Drop Here</div>
+  <div id='dragdrop'>
+    Drag &amp; Drop Here
+    <input type='file' style='display:none' id='upload' multiple='multiple'>
+  </div>
 </body>
 </html>
