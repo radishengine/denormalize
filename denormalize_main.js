@@ -1281,14 +1281,14 @@ function(GIF) {
             else if (b[0] > 0x80) {
               return blob.readBuffered(offset, offset + 1)
               .then(function(b2) {
-                if (b[0] === 0xFF && b[2] > 0x80) {
+                if (b[0] === 0xFF && b2[0] > 0x80) {
                   out_i += b2[0] - 1;
                   offset += 2;
                   return blob.readBuffered(offset, offset+1).then(decode);
                 }
                 out_i += b[0] - 0x80;
                 offset++;
-                return decode(b.subarray(1));
+                return decode(b2);
               });
             }
             else {
