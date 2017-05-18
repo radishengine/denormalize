@@ -173,7 +173,7 @@ function(GIF, MGL, GDV, DAS) {
             if (this.timeout !== null) {
               window.clearTimeout(this.timeout);
             }
-            this.timeout = window.setTimeout(this.onchange.bind(this), 250);
+            this.timeout = window.setTimeout(this.onchange.bind(this), 400);
           }
         };
         section.filter.addTag = function(name, value) {
