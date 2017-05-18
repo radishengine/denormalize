@@ -1,4 +1,5 @@
-define(function(['blobMethods']) {
+define(['blobMethods'],
+function() {
 
   'use strict';
   
