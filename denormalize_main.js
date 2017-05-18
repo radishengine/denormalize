@@ -121,16 +121,19 @@ function(GIF, MGL, GDV, DAS) {
         section.filter.tagAdder.placeholder.disabled = true;
         section.filter.tagAdder.placeholder.selected = true;
         section.filter.tagAdder.placeholder.hidden = true;
-        section.filter.tagAdder.onchange = function(e) {
+        section.filter.appendTag = function(tagName) {
           var tag = document.createElement('DIV');
           tag.className = 'tag';
-          tag.innerText = this.value;
+          tag.innerText = tagName;
           tag.onclick = function() {
             section.filter.removeChild(this);
           };
+          section.filter.insertBefore(tag, section.filter.edit);
+        }
+        section.filter.tagAdder.onchange = function(e) {
+          this.appendTag(this.value);
           this.value = '';
           this.placeholder.selected = true;
-          section.filter.insertBefore(tag, section.filter.edit);
           section.filter.edit.focus();
         };
         section.filter.appendChild(section.filter.edit = document.createElement('INPUT'));
@@ -140,6 +143,19 @@ function(GIF, MGL, GDV, DAS) {
           if (this.timeout !== null) {
             window.clearTimeout(this.timeout);
             this.timeout = null;
+          }
+          var v = this.value;
+          var selStart = this.selectionStart, selEnd = this.selectionEnd;
+          var replaced = v.replace(/(?:^|\s)([\-+])?tag:(\S+)(?:\s+|$)/i, function(total, op, tagName, offset) {
+            section.filter.appendTag((op || '') + 'tag:' + tagName);
+            if (selStart >= offset) selStart - total.length;
+            if (selEnd >= offset) selEnd - total.length;
+            return ' ';
+          });
+          if (v !== replaced) {
+            this.value = replaced;
+            this.selectionStart = selStart;
+            this.selectionEnd = selEnd;
           }
           console.log(this.value);
         };
