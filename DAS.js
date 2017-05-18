@@ -1,6 +1,23 @@
-define(function() {
+define(['blobMethods'], function() {
 
   'use strict';
+  
+  const LITTLE_ENDIAN = (new Uint16Array(new Uint8Array([1, 0]).buffer)[0] === 1);
+    
+  function readPalette(bytes) {
+    var pal = new Uint8Array(256 * 4);
+    for (var i = 0; i < 256; i++) {
+      var r = bytes[i*3], g = bytes[i*3 + 1], b = bytes[i*3 + 2];
+      r = (r << 2) | (r >>> 4);
+      g = (g << 2) | (g >>> 4);
+      b = (b << 2) | (b >>> 4);
+      pal[i*4] = r;
+      pal[i*4 + 1] = g;
+      pal[i*4 + 2] = b;
+      pal[i*4 + 3] = 0xff;
+    }
+    return new Uint32Array(pal.buffer, pal.byteOffset, 256);
+  }
   
   function DASFileHeader(buffer, byteOffset, byteLength) {
     this.bytes = new Uint8Array(buffer, byteOffset, byteLength);
