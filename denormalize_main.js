@@ -136,12 +136,17 @@ function(GIF, MGL, GDV, DAS) {
         section.filter.appendChild(section.filter.edit = document.createElement('INPUT'));
         section.filter.edit.setAttribute('type', 'text');
         section.filter.edit.setAttribute('placeholder', 'search');
-        section.filter.edit.onkeydown = function(e) {
+        section.filter.edit.onchange = function(e) {
+          console.log(this.value);
+        };
+        section.filter.edit.onkeyup = function(e) {
           if (e.which === 8                              // backspace
           && !(this.selectionStart || this.selectionEnd) // cursor at position 0
           && this.previousElementSibling.classList.contains('tag')) { // previous sibling is tag
             section.filter.removeChild(this.previousElementSibling);
           }
+          if (e.which === 13) this.blur(); // enter
+          if (e.which === 32) this.onchange(); // space triggers onchange
         };
         section.filter.addTag = function(name, value) {
           var option = document.createElement('OPTION');
