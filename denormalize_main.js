@@ -134,6 +134,8 @@ function(GIF, MGL, GDV, DAS) {
           section.filter.edit.focus();
         };
         section.filter.appendChild(section.filter.edit = document.createElement('INPUT'));
+        section.filter.edit.setAttribute('type', 'text');
+        section.filter.edit.setAttribute('placeholder', 'search');
         section.filter.edit.onkeydown = function(e) {
           if (e.which === 8                              // backspace
           && !(this.selectionStart || this.selectionEnd) // cursor at position 0
