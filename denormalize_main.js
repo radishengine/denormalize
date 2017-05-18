@@ -146,8 +146,15 @@ function(GIF, MGL, GDV, DAS) {
           }
           var v = this.value;
           var selStart = this.selectionStart, selEnd = this.selectionEnd;
+          var self = this;
           var replaced = v.replace(/(?:^|\s)([\-+])?tag:(\S+)(?:\s+|$)/i, function(total, op, tagName, offset) {
-            if (selStart >= offset && selStart <= (offset + total.length)) return total;
+            if (selStart >= offset && selStart <= (offset + total.length)) {
+              self.onblur = function() {
+                delete self.onblur;
+                self.onchange();
+              };
+              return total;
+            }
             section.filter.appendTag((op || '') + 'tag:' + tagName);
             if (selStart >= offset) selStart - total.length;
             if (selEnd >= offset) selEnd - total.length;
