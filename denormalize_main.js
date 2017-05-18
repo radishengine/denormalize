@@ -208,6 +208,7 @@ function(GIF, MGL, GDV, DAS) {
           if (e.which === 27) { // esc
             this.value = '';
             this.blur();
+            this.onchange();
             return;
           }
           else if (this.value === '') this.onchange();
