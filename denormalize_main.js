@@ -2,8 +2,8 @@ requirejs.config({
   waitSeconds: 0,
 });
 
-define(['GIF', 'blobMethods'],
-function(GIF) {
+define(['GIF', 'MGL', 'blobMethods'],
+function(GIF, MGL) {
 
   'use strict';
   
