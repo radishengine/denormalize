@@ -123,6 +123,7 @@ function(GIF, MGL, GDV, DAS) {
         section.filter.tagAdder.placeholder.hidden = true;
         section.filter.tagAdder.onchange = function(e) {
           var tag = document.createElement('DIV');
+          tag.classList = 'tag';
           tag.innerText = this.value;
           tag.onclick = function() {
             section.filter.tagAdder.removeChild(this);
