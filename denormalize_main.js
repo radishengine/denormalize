@@ -187,9 +187,9 @@ function(GIF, MGL, GDV, DAS) {
         ]);
 
         addFilter(section.images, 'imageMode', [
-          {value:'-hide_textures -hide_sprites', text:'Textures & Sprites'},
-          {value:'-hide_textures +hide_sprites', text:'Sprites Only'},
-          {value:'+hide_textures -hide_sprites', text:'Textures Only'},
+          {value:'-hide_sprites -hide_textures', text:'Textures & Sprites'},
+          {value:'-hide_sprites +hide_textures', text:'Sprites Only'},
+          {value:'+hide_sprites -hide_textures', text:'Textures Only'},
         ]);
 
         function addImage(image) {
