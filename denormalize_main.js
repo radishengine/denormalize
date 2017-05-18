@@ -158,29 +158,39 @@ function(GIF, MGL, GDV, DAS) {
         }
 
         createSorter(section.images);
-
-        section.images.head.appendChild(document.createTextNode(' '));
-        section.images.head.appendChild(section.images.animationMode = document.createElement('SELECT'));
-        var options = [
+        
+        function addFilter(subsection, name, options) {
+          var filter;
+          subsection.head.appendChild(document.createTextNode(' '));
+          subsection.head.appendChild(filter = subsection[name] = document.createElement('SELECT'));
+          for (var i = 0; i < options.length; i++) {
+            var option = document.createElement('OPTION');
+            option.value = options[i].value;
+            option.text = options[i].text;
+            if (options[i].selected) option.selected = true;
+            filter.appendChild(option);
+          }
+          filter.onchange = function(e) {
+            var classDiff = this.value.match(/\S+/g);
+            for (var i = 0; i < classDiff.length; i++) {
+              var op = classDiff[i][0], className = classDiff[i].slice(1);
+              if (op === '-') subsection.classList.remove(className);
+              else subsection.classList.add(className);
+            }
+          };
+        }
+        
+        addFilter(section.images, 'animationMode', [
           {value:'-hide_animated -hide_static', text:'Static & Animated'},
           {value:'-hide_animated +hide_static', text:'Animated Only'},
           {value:'+hide_animated -hide_static', text:'Static Only'},
-        ];
-        for (var i = 0; i < options.length; i++) {
-          var option = document.createElement('OPTION');
-          option.value = options[i].value;
-          option.text = options[i].text;
-          if (options[i].selected) option.selected = true;
-          section.images.animationMode.appendChild(option);
-        }
-        section.images.animationMode.onchange = function(e) {
-          var classDiff = this.value.match(/\S+/g);
-          for (var i = 0; i < classDiff.length; i++) {
-            var op = classDiff[i][0], className = classDiff[i].slice(1);
-            if (op === '-') section.images.classList.remove(className);
-            else section.images.classList.add(className);
-          }
-        };
+        ]);
+
+        addFilter(section.images, 'imageMode', [
+          {value:'-hide_textures -hide_sprites', text:'Textures & Sprites'},
+          {value:'-hide_textures +hide_sprites', text:'Sprites Only'},
+          {value:'+hide_textures -hide_sprites', text:'Textures Only'},
+        ]);
 
         function addImage(image) {
           var el = document.createElement('DIV');
