@@ -112,6 +112,47 @@ function(GIF, MGL, GDV, DAS) {
     }
     else if (/\.das$/i.test(file.name)) {
       DAS.read(file).then(function(das) {
+        section.appendChild(section.filter = document.createElement('DIV'));
+        section.filter.className = 'filter';
+        section.filter.appendChild(section.filter.tagAdder = document.createElement('SELECT'));
+        section.filter.tagAdder.appendChild(section.filter.tagAdder.placeholder = document.createElement('OPTION'));
+        section.filter.tagAdder.placeholder.text = 'Tag:';
+        section.filter.tagAdder.placeholder.value = '';
+        section.filter.tagAdder.placeholder.disabled = true;
+        section.filter.tagAdder.placeholder.selected = true;
+        section.filter.tagAdder.placeholder.hidden = true;
+        section.filter.tagAdder.onchange = function(e) {
+          var tag = document.createElement('DIV');
+          tag.innerText = this.value;
+          tag.onclick = function() {
+            section.filter.tagAdder.removeChild(this);
+          };
+          this.value = '';
+          this.placeholder.selected = true;
+          section.filter.insertBefore(tag, section.filter.edit);
+        };
+        section.filter.appendChild(section.filter.edit = document.createElement('INPUT'));
+        section.filter.edit.onkeypress = function(e) {
+          if (e.which === 8                              // backspace
+          && !(this.selectionStart && this.selectionEnd) // cursor at position 0
+          && this.previousElementSibling.classList.contains('tag')) { // previous sibling is tag
+            section.filter.removeChild(this.previousElementSibling);
+          }
+        };
+        section.filter.addTag = function(name, value) {
+          var option = document.createElement('OPTION');
+          option.text = name;
+          option.value = value;
+          this.tagAdder.appendChild(option);
+        };
+        
+        section.filter.addTag('Animated', 'tag:animated');
+        section.filter.addTag('Non-Animated', '-tag:animated');
+        section.filter.addTag('Blended', 'tag:translucent');
+        section.filter.addTag('Non-Blended', '-tag:translucent');
+        section.filter.addTag('Solid', 'tag:solid');
+        section.filter.addTag('Non-Solid', '-tag:solid');
+        
         section.appendChild(section.images = document.createElement('DIV'));
 
         section.images.classList.add('gallery');
