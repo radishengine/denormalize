@@ -116,7 +116,7 @@ function(GIF, MGL, GDV, DAS) {
         section.filter.className = 'filter';
         section.filter.appendChild(section.filter.tagAdder = document.createElement('SELECT'));
         section.filter.tagAdder.appendChild(section.filter.tagAdder.placeholder = document.createElement('OPTION'));
-        section.filter.tagAdder.placeholder.text = '+ filter...';
+        section.filter.tagAdder.placeholder.text = '+filter...';
         section.filter.tagAdder.placeholder.value = '';
         section.filter.tagAdder.placeholder.disabled = true;
         section.filter.tagAdder.placeholder.selected = true;
