@@ -180,7 +180,7 @@ function(GIF, MGL, GDV, DAS) {
             section.classList.remove('searching');
           }
           else {
-            var regex = new RegExp('^' + parts.map(function(part) {
+            var regex = new RegExp(parts.map(function(part) {
               return '(?=.*' + part.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&') + ')';
             }).join(''), 'i');
             console.log(regex);
