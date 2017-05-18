@@ -137,7 +137,7 @@ function(GIF, MGL, GDV, DAS) {
           section.filter.edit.focus();
         };
         section.filter.appendChild(section.filter.edit = document.createElement('INPUT'));
-        section.filter.edit.setAttribute('type', 'text');
+        section.filter.edit.setAttribute('type', 'search');
         section.filter.edit.setAttribute('placeholder', 'search');
         section.filter.edit.onchange = function(e) {
           if (this.timeout !== null) {
@@ -219,6 +219,7 @@ function(GIF, MGL, GDV, DAS) {
             this.timeout = window.setTimeout(this.onchange.bind(this), 400);
           }
         };
+        section.filter.edit.onsearch = section.filter.edit.oninput = section.filter.edit.onchange;
         section.filter.addTag = function(name, value) {
           var option = document.createElement('OPTION');
           option.text = name;
