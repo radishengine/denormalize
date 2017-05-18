@@ -168,7 +168,7 @@ function(GIF, MGL, GDV, DAS) {
         ];
         for (var i = 0; i < options.length; i++) {
           var option = document.createElement('OPTION');
-          option.value = '+' + options[i].value;
+          option.value = options[i].value;
           option.text = options[i].text;
           if (options[i].selected) option.selected = true;
           section.images.animationMode.appendChild(option);
