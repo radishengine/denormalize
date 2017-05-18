@@ -1,4 +1,4 @@
-define(['blobMethods'], function() {
+define(['GIF', 'blobMethods'], function(GIF) {
 
   'use strict';
   
