@@ -131,6 +131,7 @@ function(GIF, MGL, GDV, DAS) {
           this.value = '';
           this.placeholder.selected = true;
           section.filter.insertBefore(tag, section.filter.edit);
+          section.filter.edit.focus();
         };
         section.filter.appendChild(section.filter.edit = document.createElement('INPUT'));
         section.filter.edit.onkeydown = function(e) {
