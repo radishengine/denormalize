@@ -219,7 +219,10 @@ function(GIF, MGL, GDV, DAS) {
             this.timeout = window.setTimeout(this.onchange.bind(this), 400);
           }
         };
-        section.filter.edit.onsearch = section.filter.edit.oninput = section.filter.edit.onchange;
+        section.filter.edit.onsearch = function() {
+          this.blur();
+          this.onchange();
+        };
         section.filter.addTag = function(name, value) {
           var option = document.createElement('OPTION');
           option.text = name;
