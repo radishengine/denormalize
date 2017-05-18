@@ -138,8 +138,17 @@
       flex-grow: 1;
     }
     .filter .tag {
+      font-size: small;
       background: red;
       color: white;
+      border-radius: 5px;
+      padding: 2px 5px;
+      text-shadow: 1px 1px black;
+      font-weight: bold;
+      cursor:pointer;
+    }
+    .filter .tag::before {
+      content: 'X';
     }
   </style>
 </head>
