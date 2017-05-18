@@ -137,8 +137,13 @@ function(GIF, MGL, GDV, DAS) {
         section.filter.edit.setAttribute('type', 'text');
         section.filter.edit.setAttribute('placeholder', 'search');
         section.filter.edit.onchange = function(e) {
+          if (this.timeout !== null) {
+            window.clearTimeout(this.timeout);
+            this.timeout = null;
+          }
           console.log(this.value);
         };
+        section.filter.edit.timeout = null;
         section.filter.edit.onkeyup = function(e) {
           if (e.which === 8                              // backspace
           && !(this.selectionStart || this.selectionEnd) // cursor at position 0
@@ -147,6 +152,13 @@ function(GIF, MGL, GDV, DAS) {
           }
           if (e.which === 13) this.blur(); // enter
           if (e.which === 32) this.onchange(); // space triggers onchange
+          else if (this.value === '') this.onchange();
+          else {
+            if (this.timeout !== null) {
+              window.clearTimeout(this.timeout);
+            }
+            this.timeout = window.setTimeout(this.onchange.bind(this), 250);
+          }
         };
         section.filter.addTag = function(name, value) {
           var option = document.createElement('OPTION');
