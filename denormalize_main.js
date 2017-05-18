@@ -175,7 +175,26 @@ function(GIF, MGL, GDV, DAS) {
               this.setSelectionRange(selStart, selEnd);
             }
           }
-          console.log(this.value);
+          var parts = this.value.match(/\S+/g);
+          if (parts.length === 0) {
+            section.classList.remove('searching');
+          }
+          else {
+            var regex = new RegExp('^' + parts.map(function(part) {
+              return '(?=.*' + part.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&') + ')';
+            }).join(''), 'i');
+            console.log(regex);
+            var allNodes = section.images.children;
+            for (var i = 0; i < allNodes.length; i++) {
+              if (regex.test(allNodes[i].innerText)) {
+                allNodes[i].classList.add('search-result');
+              }
+              else {
+                allNodes[i].classList.remove('search-result');
+              }
+            }
+            section.classList.add('searching');
+          }
         };
         section.filter.edit.timeout = null;
         section.filter.edit.onkeyup = function(e) {
