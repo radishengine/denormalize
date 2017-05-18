@@ -133,7 +133,7 @@ function(GIF, MGL, GDV, DAS) {
           section.filter.insertBefore(tag, section.filter.edit);
         };
         section.filter.appendChild(section.filter.edit = document.createElement('INPUT'));
-        section.filter.edit.onkeypress = function(e) {
+        section.filter.edit.onkeydown = function(e) {
           if (e.which === 8                              // backspace
           && !(this.selectionStart && this.selectionEnd) // cursor at position 0
           && this.previousElementSibling.classList.contains('tag')) { // previous sibling is tag
