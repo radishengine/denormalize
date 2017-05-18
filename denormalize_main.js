@@ -192,6 +192,12 @@ function(GIF, MGL, GDV, DAS) {
           {value:'+hide_sprites -hide_textures', text:'Textures Only'},
         ]);
 
+        addFilter(section.images, 'matteMode', [
+          {value:'-hide_translucent -hide_matte', text:'Matte & Translucent'},
+          {value:'-hide_translucent +hide_matte', text:'Translucent Only'},
+          {value:'+hide_translucent -hide_matte', text:'Matte Only'},
+        ]);
+
         function addImage(image) {
           var el = document.createElement('DIV');
           el.className = 'gallery-item kind-' + image.kind;
@@ -220,6 +226,7 @@ function(GIF, MGL, GDV, DAS) {
           this.appendChild(el);
           image.retrievedHeader.then(function(header) {
             el.classList.add(header.isAnimated ? 'kind-animated' : 'kind-static');
+            el.classList.add((header.flags & 0x400) ? 'kind-translucent' : 'kind-matte');
             el.image.style.width = header.width + 'px';
             el.image.style.height = header.height + 'px';
             var flags = [];
