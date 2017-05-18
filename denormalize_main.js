@@ -175,7 +175,7 @@ function(GIF, MGL, GDV, DAS) {
               this.setSelectionRange(selStart, selEnd);
             }
           }
-          var parts = this.value.match(/\S+/g);
+          var parts = this.value.match(/\S+/g) || [];
           if (parts.length === 0) {
             section.classList.remove('searching');
           }
