@@ -209,6 +209,7 @@ function(GIF, MGL, GDV, DAS) {
           
           this.appendChild(el);
           image.retrievedHeader.then(function(header) {
+            el.classList.add(header.isAnimated ? 'kind-animated' : 'kind-static');
             el.image.style.width = header.width + 'px';
             el.image.style.height = header.height + 'px';
             var flags = [];
