@@ -141,14 +141,25 @@
       font-size: small;
       background: red;
       color: white;
-      border-radius: 5px;
+      border-radius: 10px 0 0 10px;
       padding: 2px 5px;
+      margin: 0 3px;
       text-shadow: 1px 1px black;
       font-weight: bold;
       cursor:pointer;
     }
-    .filter .tag::before {
-      content: 'X';
+    .filter .tag:hover {
+      text-decoration: line-through;
+    }
+    .filter > select {
+      font-size: small;
+      background: mediumseagreen;
+      color: white;
+      border-radius: 10px 0 0 10px;
+      padding: 2px 5px;
+      margin: 0 3px;
+      text-shadow: 1px 1px black;
+      font-weight: bold;
     }
   </style>
 </head>
