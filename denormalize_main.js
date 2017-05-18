@@ -151,8 +151,9 @@ function(GIF, MGL, GDV, DAS) {
           }
           var self = this;
           var midTag;
-          var replaced = v.replace(/(?:^|\s)([\-+])?tag:(\S+)(?:\s+|$)/i, function(total, op, tagName, offset) {
-            if (selStart >= offset && selStart <= (offset + total.length)) {
+          var replaced = v.replace(/([\-+])?tag:(\S+)(?=\s|$)/i, function(total, op, tagName, offset, v) {
+            if (offset > 0 && v[offset-1] !== ' ') return total;
+            if (selEnd >= offset && selStart <= (offset + total.length)) {
               midTag = true;
               return total;
             }
