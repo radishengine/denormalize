@@ -176,7 +176,7 @@ function(GIF, MGL, GDV, DAS) {
         section.images.animationMode.onchange = function(e) {
           var classDiff = this.value.match(/\S+/g);
           for (var i = 0; i < classDiff.length; i++) {
-            var op = classDiff[0], className = classDiff.slice(1);
+            var op = classDiff[i][0], className = classDiff[i].slice(1);
             if (op === '-') section.images.classList.remove(className);
             else section.images.classList.add(className);
           }
