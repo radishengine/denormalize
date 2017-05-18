@@ -131,7 +131,7 @@ function(GIF, MGL, GDV, DAS) {
           section.filter.insertBefore(tag, section.filter.edit);
         }
         section.filter.tagAdder.onchange = function(e) {
-          this.appendTag(this.value);
+          section.filter.appendTag(this.value);
           this.value = '';
           this.placeholder.selected = true;
           section.filter.edit.focus();
@@ -146,13 +146,14 @@ function(GIF, MGL, GDV, DAS) {
           }
           var v = this.value;
           var selStart = this.selectionStart, selEnd = this.selectionEnd;
+          if (document.activeElement !== this) {
+            selStart = selEnd = -1;
+          }
           var self = this;
+          var midTag;
           var replaced = v.replace(/(?:^|\s)([\-+])?tag:(\S+)(?:\s+|$)/i, function(total, op, tagName, offset) {
             if (selStart >= offset && selStart <= (offset + total.length)) {
-              self.onblur = function() {
-                delete self.onblur;
-                self.onchange();
-              };
+              midTag = true;
               return total;
             }
             section.filter.appendTag((op || '') + 'tag:' + tagName);
@@ -160,10 +161,18 @@ function(GIF, MGL, GDV, DAS) {
             if (selEnd >= offset) selEnd - total.length;
             return ' ';
           });
+          if (midTag) {
+            self.onblur = function() {
+              delete self.onblur;
+              self.onchange();
+            };
+            return;
+          }
           if (v !== replaced) {
             this.value = replaced;
-            this.selectionStart = selStart;
-            this.selectionEnd = selEnd;
+            if (selStart >= 0) {
+              this.setSelectionRange(selStart, selEnd);
+            }
           }
           console.log(this.value);
         };
