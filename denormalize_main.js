@@ -159,6 +159,29 @@ function(GIF, MGL, GDV, DAS) {
 
         createSorter(section.images);
 
+        section.images.head.appendChild(document.createTextNode(' '));
+        section.images.head.appendChild(section.images.animationMode = document.createElement('SELECT'));
+        var options = [
+          {value:'-hide_animated -hide_static', text:'Static & Animated'},
+          {value:'-hide_animated +hide_static', text:'Animated Only'},
+          {value:'+hide_animated -hide_static', text:'Static Only'},
+        ];
+        for (var i = 0; i < options.length; i++) {
+          var option = document.createElement('OPTION');
+          option.value = '+' + options[i].value;
+          option.text = options[i].text;
+          if (options[i].selected) option.selected = true;
+          section.images.animationMode.appendChild(option);
+        }
+        section.images.animationMode.onchange = function(e) {
+          var classDiff = this.value.match(/\S+/g);
+          for (var i = 0; i < classDiff.length; i++) {
+            var op = classDiff[0], className = classDiff.slice(1);
+            if (op === '-') section.images.classList.remove(className);
+            else section.images.classList.add(className);
+          }
+        };
+
         function addImage(image) {
           var el = document.createElement('DIV');
           el.className = 'gallery-item kind-' + image.kind;
