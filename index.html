@@ -110,6 +110,12 @@
         margin-right: 3px;
         border-radius: 0 0 5px 5px;
       }
+      .hide_animated .gallery-item.kind-animated,
+      .hide_static .gallery-item.kind-static,
+      .hide_sprites .gallery-item.kind-static,
+      .hide_textures .gallery-item.kind-texture {
+        display: none;
+      }
     }
     @media only screen and (max-width: 400px) {
       .gallery-item {
