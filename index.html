@@ -86,38 +86,6 @@
     .count::after {
       content: ')';
     }
-    @media only screen and (max-width: 500px) {
-      html, body {
-        padding-left: 0;
-        padding-right: 0;
-        margin-left: 0;
-        margin-right: 0;
-      }
-      #dragdrop {
-        border-left: 0;
-        border-right: 0;
-      }
-      .section {
-        border-left: 0;
-        border-right: 0;
-        margin-top: 8px;
-        border-radius: 0;
-      }
-      .section > .content {
-        padding: 0;
-      }
-      .close_button {
-        margin-right: 3px;
-        border-radius: 0 0 5px 5px;
-      }
-    }
-    @media only screen and (max-width: 400px) {
-      .gallery-item {
-        border: 0;
-        margin: 0;
-        box-shadow: 2px 2px 0 white inset, 4px 4px 5px rgba(0,0,0,0.2) inset;
-      }
-    }
     .hide_animated .gallery-item.kind-animated,
     .hide_static .gallery-item.kind-static,
     .hide_sprites .gallery-item.kind-sprite,
@@ -169,6 +137,43 @@
       font-weight: bold;
       color: black;
       background: white;
+    }
+    @media only screen and (max-width: 500px) {
+      html, body {
+        padding-left: 0;
+        padding-right: 0;
+        margin-left: 0;
+        margin-right: 0;
+      }
+      #dragdrop {
+        border-left: 0;
+        border-right: 0;
+      }
+      .section {
+        border-left: 0;
+        border-right: 0;
+        margin-top: 8px;
+        border-radius: 0;
+      }
+      .section > .content {
+        padding: 0;
+      }
+      .close_button {
+        margin-right: 3px;
+        border-radius: 0 0 5px 5px;
+      }
+      .filter {
+        flex-flow: column nowrap;
+        justify-content: flex-start;
+        align-items: stretch;
+      }
+    }
+    @media only screen and (max-width: 400px) {
+      .gallery-item {
+        border: 0;
+        margin: 0;
+        box-shadow: 2px 2px 0 white inset, 4px 4px 5px rgba(0,0,0,0.2) inset;
+      }
     }
   </style>
 </head>
