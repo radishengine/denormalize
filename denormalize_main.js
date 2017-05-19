@@ -2,8 +2,8 @@ requirejs.config({
   waitSeconds: 0,
 });
 
-define(['GIF', 'MGL', 'GDV', 'DAS', 'blobMethods'],
-function(GIF, MGL, GDV, DAS) {
+define(['blobMethods'],
+function() {
 
   'use strict';
   
@@ -52,7 +52,7 @@ function(GIF, MGL, GDV, DAS) {
   function onfile(file) {
     var section = createSection(file.name);
     if (/\.gdv$/i.test(file.name)) {
-      GDV.read(file).then(function(gdv) {
+      file.read('GDV').then(function(gdv) {
         section.titleElement.innerText += ' (' + gdv.durationString + ')';
         var lastFrame;
         if (gdv.fileHeader.videoIsPresent) {
@@ -106,7 +106,7 @@ function(GIF, MGL, GDV, DAS) {
       });
     }
     else if (/\.mgl$/i.test(file.name)) {
-      MGL.decode(file).then(
+      file.decode('MGL').then(
         function(file2) {
           if (file2.type === 'application/x-das') {
             file2.name = file.name.replace(/\..*$/, '.DAS');
@@ -122,7 +122,7 @@ function(GIF, MGL, GDV, DAS) {
         });
     }
     else if (/\.das$/i.test(file.name)) {
-      DAS.read(file).then(function(das) {
+      file.read('DAS').then(function(das) {
         section.appendChild(section.filter = document.createElement('DIV'));
         section.filter.update = function() {
           var text = this.edit.value;
