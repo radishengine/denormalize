@@ -1,4 +1,4 @@
-define(['GIF', 'blobMethods'], function(GIF) {
+define(['blobMethods'], function() {
 
   'use strict';
   
@@ -301,6 +301,7 @@ define(['GIF', 'blobMethods'], function(GIF) {
       var palette = this.palette;
       return this.getAllFrames().then(function(frames) {
         var rotated = new Uint8Array(frames[0].length);
+        var buffers = new Array(frames.length);
         for (var i_frame = 0; i_frame < frames.length; i_frame++) {
           var frame = frames[i_frame];
           var w = frame.width, h = frame.height;
@@ -308,8 +309,9 @@ define(['GIF', 'blobMethods'], function(GIF) {
             rotated[i] = frame[(i % w)*h + ((i / w)|0)];
           }
           frame.set(rotated);
+          buffers[i_frame] = frame.buffer;
         }
-        return GIF.encode(palette, frames);
+        return Blob.encode('GIF', [palette, frames], buffers);
       });
     },
   };
