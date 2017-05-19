@@ -148,7 +148,7 @@ function(GIF, MGL, GDV, DAS) {
             section.classList.add('searching');
           }
           var tags = [];
-          for (var el = section.filter.firstElement; el; el = el.nextElementSibling) {
+          for (var el = section.filter.firstElementChild; el; el = el.nextElementSibling) {
             var tag = el.innerText;
             console.log(tag);
           }
