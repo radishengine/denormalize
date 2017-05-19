@@ -351,7 +351,7 @@ function(GIF, MGL, GDV, DAS) {
         function addImage(image) {
           var el = document.createElement('DIV');
           el.className = 'gallery-item is-' + image.kind;
-          if (image.kind === 'sprite') el.classList.add('stencil');
+          if (image.kind === 'sprite') el.classList.add('is-stencil');
           el.dataset.index = image.nameRecord.index;
           el.dataset.shortName = image.nameRecord.shortName;
           el.dataset.longName = image.nameRecord.longName;
