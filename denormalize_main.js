@@ -147,9 +147,10 @@ function(GIF, MGL, GDV, DAS) {
             }
             section.classList.add('searching');
           }
+          var tags = [];
           for (var el = section.filter.firstElement; el; el = el.nextElementSibling) {
-            var text = el.innerText;
-            
+            var tag = el.innerText;
+            console.log(tag);
           }
         };
         section.filter.className = 'filter';
