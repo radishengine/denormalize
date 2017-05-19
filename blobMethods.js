@@ -15,7 +15,8 @@ define(['require'], function(require) {
       worker.ids = Object.create(null);
       workers.push(worker);
       worker.terminateTimeout = null;
-      worker.addEventListener('message', function(msg) {
+      worker.addEventListener('message', function(e) {
+        var msg = e.data;
         delete worker.ids[msg.id];
         if (--worker.activeCount < 1 && worker.terminateTimeout === null) {
           worker.terminateTimeout = setTimeout(function() {
@@ -23,6 +24,9 @@ define(['require'], function(require) {
             worker.terminate();
           }, 5000);
         }
+      });
+      worker.addEventListener('error', function(e) {
+        workers.splice(workers.indexOf(worker), 1);
       });
     }
     else {
@@ -36,20 +40,23 @@ define(['require'], function(require) {
     var id; do { id = ((Math.random() * 0x7fffffff)|0).toString(16); } while (id in worker.ids);
     worker.ids[id] = true;
     return new Promise(function(resolve, reject) {
-      function onmessage(msg) {
+      function onmessage(e) {
+        var msg = e.data;
         if (msg.id !== id) return;
         worker.removeEventListener('message', onmessage);
         worker.removeEventListener('error', onerror);
         if (msg.success) resolve(msg.result); else reject(msg.result);
       }
-      function onerror(msg) {
+      function onerror(e) {
         worker.removeEventListener('message', onmessage);
         worker.removeEventListener('error', onerror);
-        reject(msg);
+        reject('worker error');
       }
       worker.addEventListener('message', onmessage);
       worker.addEventListener('error', onerror);
-      worker.postMessage({type:typeName, method:methodName, args:args, id:id}, transferList);
+      worker.postMessage(
+        {type:typeName, method:methodName, args:args, id:id},
+        transferList);
     });
   }
   
