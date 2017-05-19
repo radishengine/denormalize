@@ -167,8 +167,10 @@ function(GIF, MGL, GDV, DAS) {
           tag.innerText = tagName;
           tag.onclick = function() {
             section.filter.removeChild(this);
+            section.filter.update();
           };
           section.filter.insertBefore(tag, section.filter.edit);
+          this.update();
         }
         section.filter.tagAdder.onchange = function(e) {
           section.filter.appendTag(this.value);
@@ -251,13 +253,13 @@ function(GIF, MGL, GDV, DAS) {
           this.tagAdder.appendChild(option);
         };
         
-        section.filter.addTag('Sprites', '+tag:sprite');
+        section.filter.addTag('Sprites', 'tag:sprite');
         section.filter.addTag('Textures', '-tag:sprite');
-        section.filter.addTag('Animated', '+tag:animated');
+        section.filter.addTag('Animated', 'tag:animated');
         section.filter.addTag('Non-Animated', '-tag:animated');
-        section.filter.addTag('Blended', '+tag:blended');
+        section.filter.addTag('Blended', 'tag:blended');
         section.filter.addTag('Non-Blended', '-tag:blended');
-        section.filter.addTag('Stencil Mask', '+tag:stencil');
+        section.filter.addTag('Stencil Mask', 'tag:stencil');
         section.filter.addTag('Solid Mask', '-tag:stencil');
         
         section.appendChild(section.images = document.createElement('DIV'));
