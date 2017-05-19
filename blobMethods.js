@@ -1,8 +1,38 @@
-define(function() {
+define(['require'], function(require) {
 
   'use strict';
   
   const BUFFER_SIZE = 64 * 1024;
+  
+  Blob.prototype.typeMethod = function(typeName, methodName) {
+    var args = [this];
+    if (arguments.length > 2) {
+      args.push.apply(args, Array.prototype.slice.call(arguments, 2));
+    }
+    return new Promise(function(resolve, reject) {
+      require(
+        [typeName],
+        function(typedef) {
+          if (typeof typedef[methodName] !== 'function') {
+            reject('no ' + methodName + ' handler defined for type ' + typeName);
+          }
+          else {
+            resolve(typedef[methodName].apply(typedef, args));
+          }
+        },
+        function() {
+          reject('failed to load type handler for ' + typeName);
+        });
+    });
+  };
+  
+  Blob.prototype.decode = function(typeName) {
+    return this.typeMethod(typeName, 'decode');
+  };
+  
+  Blob.prototype.read = function(typeName) {
+    return this.typeMethod(typeName, 'read');
+  };
   
   Blob.prototype.readBuffered = function(sliceFrom, sliceTo) {
     if (sliceTo < sliceFrom) throw new RangeError('sliceTo < sliceFrom');
