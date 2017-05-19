@@ -13,6 +13,7 @@ function() {
   
   var killModal = document.getElementById('kill-modal');
   killModal.onclick = function() {
+    this.blur();
     document.body.classList.remove("modal-active");
     document.querySelector('.modal-content').classList.remove('modal-content');
   };
