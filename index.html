@@ -143,6 +143,10 @@
     .filter > select:hover {
       background: #8c8;
     }
+    .filter > select:active {
+      background: mediumseagreen;
+      box-shadow: 2px 2px 5px rgba(0,0,0, 0.5) inset;
+    }
     .filter > select option {
       font-weight: bold;
       color: black;
@@ -176,7 +180,7 @@
         border-radius: 0 0 5px 5px;
         box-shadow: 2px 0 0 black, 2px 2px 0 black;
       }
-      .close_button:hover {
+      .close_button:hover:not(:active) {
         box-shadow: 2px 0 0 black, 2px 2px 0 black, 0 0 10px red;
       }
       .filter {
