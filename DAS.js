@@ -149,6 +149,9 @@ define(['GIF', 'blobMethods'], function(GIF) {
     get isAnimated() {
       return !!(this.flags & 0x100);
     },
+    get isStencilTexture() {
+      return !(this.flags & 0x200);
+    },
     get height() {
       return this.dv.getUint16(2, true);
     },
@@ -204,17 +207,19 @@ define(['GIF', 'blobMethods'], function(GIF) {
       return promise;
     },
     getFirstFrame: function() {
+      var kind = this.kind;
       return this.retrievedData.then(function(data) {
         var header = new DASImageHeader(
           data.buffer,
           data.byteOffset,
           data.byteLength);
+        var transparent = (kind === 'sprite' || header.isStencilTexture) ? 0 : NaN;
         return Object.assign(
           // cloned so it can be rotated in-place
           new Uint8Array(data.subarray(
             header.byteLength,
             header.byteLength + header.width * header.height)),
-          {width:header.width, height:header.height});
+          {width:header.width, height:header.height, transparent:transparent});
       });
     },
     get palette() {
@@ -247,6 +252,7 @@ define(['GIF', 'blobMethods'], function(GIF) {
         }
         frames.length = durations.length;
         frames[0].duration = durations[0];
+        frames.transparent = frames[0].transparent;
         var dv = new DataView(data.buffer, data.byteOffset, data.byteLength);
         for (var frame_i = 1; frame_i < frames.length; frame_i++) {
           var in_i = offsets[frame_i], out_i = 0;
