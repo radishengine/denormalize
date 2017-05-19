@@ -36,11 +36,19 @@ define(['require'], function(require) {
     var id; do { id = ((Math.random() * 0x7fffffff)|0).toString(16); } while (id in worker.ids);
     worker.ids[id] = true;
     return new Promise(function(resolve, reject) {
-      worker.addEventListener('message', function onmessage(msg) {
+      function onmessage(msg) {
         if (msg.id !== id) return;
         worker.removeEventListener('message', onmessage);
+        worker.removeEventListener('error', onerror);
         if (msg.success) resolve(msg.result); else reject(msg.result);
-      });
+      }
+      function onerror(msg) {
+        worker.removeEventListener('message', onmessage);
+        worker.removeEventListener('error', onerror);
+        reject(msg);
+      }
+      worker.addEventListener('message', onmessage);
+      worker.addEventListener('error', onerror);
       worker.postMessage({type:typeName, method:methodName, args:args, id:id}, transferList);
     });
   }
