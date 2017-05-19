@@ -302,6 +302,13 @@ define(['blobMethods'], function() {
       return this.getAllFrames().then(function(frames) {
         var rotated = new Uint8Array(frames[0].length);
         var buffers = new Array(frames.length);
+        var defaults = {
+          transparent: frames[0].transparent,
+          palette: palette,
+          width: frames[0].width,
+          height: frames[0].height,
+        };
+        var frames2 = new Array(frames.length);
         for (var i_frame = 0; i_frame < frames.length; i_frame++) {
           var frame = frames[i_frame];
           var w = frame.width, h = frame.height;
@@ -310,8 +317,15 @@ define(['blobMethods'], function() {
           }
           frame.set(rotated);
           buffers[i_frame] = frame.buffer;
+          frames2[i_frame] = {
+            data: frame.subarray(),
+            width: frame.width,
+            height: frame.height,
+            replace: true,
+            duration: frame.duration,
+          };
         }
-        return Blob.encode('GIF', [palette, frames], buffers);
+        return Blob.encode('GIF', {defaults:defaults, frames:frames2}, buffers);
       });
     },
   };
