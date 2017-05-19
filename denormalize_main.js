@@ -150,8 +150,43 @@ function(GIF, MGL, GDV, DAS) {
           var tags = [];
           for (var el = section.filter.firstElementChild; el; el = el.nextElementSibling) {
             if (!el.classList.contains('tag')) continue;
-            var tag = el.innerText;
-            console.log(tag);
+            var tag = el.dataset.tag.match(/^(-)?tag:(.*)$/);
+            if (tag[1]) {
+              tags.push('untagged-' + tag[2]);
+            }
+            else {
+              tags.push('tagged-' + tag[2]);
+            }
+          }
+          if (tags.length > 0) {
+            var tagStyleSheet = document.tagStyleSheet;
+            if (!tagStyleSheet) {
+              document.head.appendChild(tagStyleSheet = document.createElement('STYLE'));
+              tagStyleSheet.tagRules = Object.create(null);
+            }
+            for (var i = 0; i < tags.length; i++) {
+              if (tags[i] in tagStyleSheet.tagRuleIDs) continue;
+              var id = tagStyleSheet.cssRules.length;
+              var match = tags[i].match(/^(un)?tagged-(.*)$/);
+              var rule = '.is-' + match[2];
+              if (!match[1]) rule = ':not(' + rule + ')';
+              tagStyleSheet.insertRule('.' + tags[i] + ' .gallery-item' + rule + ' { display: none !!important; }', id);
+              tagStyleSheet.tagRuleIDs[tags[i]] = id;
+            }
+          }
+          for (var i = section.classList.length-1; i >= 0; i--) {
+            if (/^(?:un)?tagged-/.test(section.classList[i])) {
+              var tag_i = tags.indexOf(section.classList[i]);
+              if (tag_i === -1) {
+                section.classList.remove(section.classList[i]);
+              }
+              else {
+                tags.splice(tag_i, 1);
+              }
+            }
+          }
+          for (var i = 0; i < tags.length; i++) {
+            section.classList.add(tags[i]);
           }
         };
         section.filter.className = 'filter';
@@ -164,6 +199,7 @@ function(GIF, MGL, GDV, DAS) {
         section.filter.tagAdder.placeholder.hidden = true;
         section.filter.appendTag = function(tagName) {
           var tag = document.createElement('DIV');
+          tag.dataset.tag = tagName;
           tag.className = 'tag';
           tag.innerText = tagName;
           tag.onclick = function() {
@@ -351,7 +387,7 @@ function(GIF, MGL, GDV, DAS) {
 
         function addImage(image) {
           var el = document.createElement('DIV');
-          el.className = 'gallery-item kind-' + image.kind;
+          el.className = 'gallery-item is-' + image.kind;
           el.dataset.index = image.nameRecord.index;
           el.dataset.shortName = image.nameRecord.shortName;
           el.dataset.longName = image.nameRecord.longName;
@@ -381,8 +417,8 @@ function(GIF, MGL, GDV, DAS) {
           
           this.appendChild(el);
           image.retrievedHeader.then(function(header) {
-            el.classList.add(header.isAnimated ? 'kind-animated' : 'kind-static');
-            el.classList.add((header.flags & 0x400) ? 'kind-translucent' : 'kind-matte');
+            if (header.isAnimated) el.classList.add('is-animated');
+            if (header.flags & 0x400) el.classList.add('is-blended');
             el.image.style.width = header.width + 'px';
             el.image.style.height = header.height + 'px';
             var flags = [];
