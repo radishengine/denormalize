@@ -20,19 +20,20 @@ define(function() {
   
   var GIF = {};
   
-  GIF.encode = function(globalPalette, pix8s) {
+  GIF.encode = function(def) {
+    var defaults = def.defaults, frames = def.frames;
     var logicalScreenDescriptor = new DataView(new ArrayBuffer(7));
     var parts = ['GIF89a', logicalScreenDescriptor];
-    var canvasWidth = pix8s.width || pix8s[0].width;
-    var canvasHeight = pix8s.height || pix8s[0].height;
+    var canvasWidth = defaults.width || frames[0].width;
+    var canvasHeight = defaults.height || frames[0].height;
     logicalScreenDescriptor.setUint16(0, canvasWidth, true);
     logicalScreenDescriptor.setUint16(2, canvasHeight, true);
-    var defaultTransparent = +pix8s.transparent;
-    if (globalPalette) {
-      var b = new Uint8Array(globalPalette.buffer, globalPalette.byteOffset, globalPalette.byteLength);
-      var palSize = 1 << Math.ceil(Math.log2(globalPalette.length));
+    var defaultTransparent = +defaults.transparent;
+    if (defaults.palette) {
+      var b = new Uint8Array(defaults.palette.buffer, defaults.palette.byteOffset, defaults.palette.byteLength);
+      var palSize = 1 << Math.ceil(Math.log2(defaults.palette.length));
       var pal = new Uint8Array(3 * palSize);
-      for (var i_col = 0; i_col < globalPalette.length; i_col++) {
+      for (var i_col = 0; i_col < defaults.palette.length; i_col++) {
         pal[i_col*3] = b[i_col*4];
         pal[i_col*3 + 1] = b[i_col*4 + 1];
         pal[i_col*3 + 2] = b[i_col*4 + 2];
@@ -94,7 +95,7 @@ define(function() {
       pushChunked(data);
     }
     
-    if (pix8s.length > 1) {
+    if (frames.length > 1) {
       parts.push(
         oneByte(0x21), oneByte(0xFF),
         oneByte("NETSCAPE2.0".length), "NETSCAPE2.0",
@@ -104,18 +105,18 @@ define(function() {
       );
     }
     
-    for (var i_pix8 = 0; i_pix8 < pix8s.length; i_pix8++) {
-      var pix8 = pix8s[i_pix8];
+    for (var i_frame = 0; i_frame < frames.length; i_frame++) {
+      var frame = frames[i_frame];
       var graphicControlExtension = new DataView(new ArrayBuffer(4));
-      var localPalette = pix8.palette;
-      var transparent = ('transparent' in pix8) ? +pix8.transparent : defaultTransparent;
+      var localPalette = frame.palette;
+      var transparent = ('transparent' in frame) ? +frame.transparent : defaultTransparent;
       var packed = isNaN(transparent) ? 0 : 1;
-      if (pix8.replace) {
-        packed |= (pix8.replace === 'previous') ? (3 << 2) : (2 << 2);
+      if (frame.replace) {
+        packed |= (frame.replace === 'previous') ? (3 << 2) : (2 << 2);
       }
       else packed |= (1 << 2);
       graphicControlExtension.setUint8(0, packed);
-      graphicControlExtension.setUint16(1, Math.ceil((pix8.duration || pix8s.duration || 100) / 10), true);
+      graphicControlExtension.setUint16(1, Math.ceil((frame.duration || defaults.duration || 100) / 10), true);
       if (!isNaN(transparent)) {
         graphicControlExtension.setUint8(3, transparent);
       }
@@ -124,10 +125,10 @@ define(function() {
       var imageDescriptor = new DataView(new ArrayBuffer(10));
       parts.push(imageDescriptor);
       imageDescriptor.setUint8(0, 0x2C);
-      if (!isNaN(pix8.x)) imageDescriptor.setInt16(1, pix8.x, true);
-      if (!isNaN(pix8.y)) imageDescriptor.setInt16(3, pix8.y, true);
-      imageDescriptor.setUint16(5, pix8.width, true);
-      imageDescriptor.setUint16(7, pix8.height, true);
+      if (!isNaN(frame.x)) imageDescriptor.setInt16(1, frame.x, true);
+      if (!isNaN(frame.y)) imageDescriptor.setInt16(3, frame.y, true);
+      imageDescriptor.setUint16(5, frame.width || defaults.width, true);
+      imageDescriptor.setUint16(7, frame.height || defaults.height, true);
       if (localPalette) {
         var pal = new Uint8Array(Math.pow(2, Math.ceil(Math.log2(localPalette.length))));
         imageDescriptor.setUint8(9, 0x80 | (Math.log2(pal.length)-1));
@@ -153,7 +154,7 @@ define(function() {
         codeTable[String.fromCharCode(i_code)] = i_code;
       }
       
-      var lzw = new Uint8Array(1 << (Math.ceil(Math.log2(pix8.length))));
+      var lzw = new Uint8Array(1 << (Math.ceil(Math.log2(frame.data.length))));
       var pos = 0;
       
       function ensure(size) {
@@ -200,12 +201,13 @@ define(function() {
       write(clearCode);
       
       var in_i = 0;
-      var indexBuffer = String.fromCharCode(pix8[in_i++]);
+      var indexBuffer = String.fromCharCode(frame.data[in_i++]);
       
       if (UNCOMPRESSED_MODE) {
         write(codeTable[indexBuffer]);
       }
       
+      var pix8 = frame.data;
       while (in_i < pix8.length) {
         var k = String.fromCharCode(pix8[in_i++]);
         
@@ -238,10 +240,7 @@ define(function() {
     
     parts.push(oneByte(0x3B)); // terminator
     
-    return Object.assign(new Blob(parts, {type:'image/gif'}), {
-      width: canvasWidth,
-      height: canvasHeight,
-    });
+    return new Blob(parts, {type:'image/gif'});
   };
   
   return GIF;
