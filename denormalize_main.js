@@ -161,7 +161,7 @@ function(GIF, MGL, GDV, DAS) {
           if (tags.length > 0) {
             var tagStyleSheet = document.tagStyleSheet;
             if (!tagStyleSheet) {
-              document.head.appendChild(tagStyleSheet = document.createElement('STYLE'));
+              document.head.appendChild(tagStyleSheet = document.tagStyleSheet = document.createElement('STYLE'));
               tagStyleSheet.tagRules = Object.create(null);
             }
             for (var i = 0; i < tags.length; i++) {
