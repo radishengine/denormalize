@@ -33,7 +33,7 @@ define(['require'], function(require) {
         worker.terminateTimeout = null;
       }
     }
-    var id; do { id = Math.random() * 0x7fffffff; } while (id in worker.ids);
+    var id; do { id = ((Math.random() * 0x7fffffff)|0).toString(16); } while (id in worker.ids);
     worker.ids[id] = true;
     return new Promise(function(resolve, reject) {
       worker.addEventListener('message', function onmessage(msg) {
