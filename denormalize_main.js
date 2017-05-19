@@ -149,6 +149,7 @@ function(GIF, MGL, GDV, DAS) {
           }
           var tags = [];
           for (var el = section.filter.firstElementChild; el; el = el.nextElementSibling) {
+            if (!el.classList.contains('tag')) continue;
             var tag = el.innerText;
             console.log(tag);
           }
