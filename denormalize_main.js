@@ -171,7 +171,7 @@ function(GIF, MGL, GDV, DAS) {
               if (!match[1]) rule = ':not(' + rule + ')';
               document.tagStyle.sheet.insertRule(
                 '.'+tags[i]+' .gallery-item'+rule
-                + ' { display: none !!important; }',
+                + ' { display: none }',
                 id);
               document.tagStyle.ruleIDs[tags[i]] = id;
             }
