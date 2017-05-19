@@ -110,7 +110,7 @@
     }
     .filter > .tag {
       font-size: small;
-      background: red;
+      background: steelblue;
       color: white;
       border-radius: 10px 0 0 10px;
       padding: 2px 5px;
@@ -118,8 +118,13 @@
       font-weight: bold;
       cursor:pointer;
     }
-    .filter .tag:hover {
+    .filter > .tag:hover {
+      background: indianred;
       text-decoration: line-through;
+    }
+    .filter > .tag:active {
+      background: darkred;
+      box-shadow: 2px 2px 5px black inset;
     }
     .filter > select {
       font-size: small;
