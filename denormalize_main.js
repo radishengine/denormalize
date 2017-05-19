@@ -157,7 +157,7 @@ function(GIF, MGL, GDV, DAS) {
               midTag = true;
               return total;
             }
-            section.filter.appendTag((op || '') + 'tag:' + tagName);
+            section.filter.appendTag((op || '+') + 'tag:' + tagName);
             if (selStart >= offset) selStart - total.length;
             if (selEnd >= offset) selEnd - total.length;
             return ' ';
@@ -230,11 +230,11 @@ function(GIF, MGL, GDV, DAS) {
           this.tagAdder.appendChild(option);
         };
         
-        section.filter.addTag('Animated', 'tag:animated');
+        section.filter.addTag('Animated', '+tag:animated');
         section.filter.addTag('Non-Animated', '-tag:animated');
-        section.filter.addTag('Blended', 'tag:translucent');
+        section.filter.addTag('Blended', '+tag:translucent');
         section.filter.addTag('Non-Blended', '-tag:translucent');
-        section.filter.addTag('Solid', 'tag:solid');
+        section.filter.addTag('Solid', '+tag:solid');
         section.filter.addTag('Non-Solid', '-tag:solid');
         
         section.appendChild(section.images = document.createElement('DIV'));
