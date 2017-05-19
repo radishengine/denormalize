@@ -391,7 +391,7 @@ function() {
           };
           
           this.appendChild(el);
-          image.retrievedHeader.then(function(header) {
+          return image.retrievedHeader.then(function(header) {
             if (header.isAnimated) el.classList.add('is-animated');
             if (header.flags & 0x400) el.classList.add('is-blended');
             if (image.kind === 'texture' && !(header.flags & 0x200)) el.classList.add('is-stencil');
@@ -408,14 +408,15 @@ function() {
             el.dataset.log2h = Math.ceil(Math.log2(Math.max(32, header.height)));
             el.dataset.wxh = header.width * header.height;
             el.style.order = el.dataset.log2h;
-          });
-          return image.getImage().then(function(imageBlob) {
+            
             var img = document.createElement('IMG');
-            img.setAttribute('width', imageBlob.width);
-            img.setAttribute('height', imageBlob.height);
-            img.setAttribute('src', URL.createObjectURL(imageBlob));
-            el.image.appendChild(img);
-            el.image.style.background = 'transparent';
+            img.setAttribute('width', header.width);
+            img.setAttribute('height', header.height);
+            return image.getImage().then(function(imageBlob) {
+              img.setAttribute('src', URL.createObjectURL(imageBlob));
+              el.image.appendChild(img);
+              el.image.style.background = 'transparent';
+            });
           });
         }
         
