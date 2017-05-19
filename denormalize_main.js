@@ -371,7 +371,7 @@ function(GIF, MGL, GDV, DAS) {
             el.title += '\nUnk: ' + image.unknown.toString(16);
             el.dataset.width = header.width;
             el.dataset.height = header.height;
-            el.dataset.log2h = Math.max(32, Math.ceil(Math.log2(header.height)));
+            el.dataset.log2h = Math.ceil(Math.log2(Math.max(32, header.height)));
             el.dataset.wxh = header.width * header.height;
             el.style.order = el.dataset.log2h;
           });
