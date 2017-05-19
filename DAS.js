@@ -325,7 +325,7 @@ define(['blobMethods'], function() {
             duration: frame.duration,
           };
         }
-        return Blob.encode('GIF', {defaults:defaults, frames:frames2}, buffers);
+        return Blob.encode('GIF', [{defaults:defaults, frames:frames2}], buffers);
       });
     },
   };
