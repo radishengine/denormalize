@@ -51,6 +51,14 @@ function() {
   
   function onfile(file) {
     var section = createSection(file.name);
+    section.classList.add('loading');
+    function success() {
+      section.classList.remove('loading');
+    }
+    function failure() {
+      section.classList.remove('loading');
+      section.classList.add('error');
+    }
     if (/\.gdv$/i.test(file.name)) {
       file.read('GDV').then(function(gdv) {
         section.titleElement.innerText += ' (' + gdv.durationString + ')';
@@ -103,23 +111,25 @@ function() {
           };
         }
         
-      });
+      })
+      .then(success, failure);
     }
     else if (/\.mgl$/i.test(file.name)) {
       file.decode('MGL').then(
-        function(file2) {
-          if (file2.type === 'application/x-das') {
-            file2.name = file.name.replace(/\..*$/, '.DAS');
-            onfile(file2);
-          }
-          else {
-            console.log(file2);
-          }
-        },
-        function(msg) {
-          section.classList.add('error');
-          section.innerText = msg;
-        });
+      function(file2) {
+        if (file2.type === 'application/x-das') {
+          file2.name = file.name.replace(/\..*$/, '.DAS');
+          onfile(file2);
+        }
+        else {
+          console.log(file2);
+        }
+      },
+      function(msg) {
+        section.classList.add('error');
+        section.innerText = msg;
+      })
+      .then(success, failure);
     }
     else if (/\.das$/i.test(file.name)) {
       file.read('DAS').then(function(das) {
@@ -398,7 +408,7 @@ function() {
             el.dataset.wxh = header.width * header.height;
             el.style.order = el.dataset.log2h;
           });
-          image.getImage().then(function(imageBlob) {
+          return image.getImage().then(function(imageBlob) {
             var img = document.createElement('IMG');
             img.setAttribute('width', imageBlob.width);
             img.setAttribute('height', imageBlob.height);
@@ -408,11 +418,13 @@ function() {
           });
         }
         
-        das.imageRecords.forEach(addImage, section.images);
-      });
+        return Promise.all(das.imageRecords.map(addImage, section.images));
+      })
+      .then(success, failure);
     }
     else {
       section.innerText = 'unknown: ' + file.name;
+      failure();
     }
   }
   
