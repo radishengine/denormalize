@@ -348,48 +348,10 @@ function(GIF, MGL, GDV, DAS) {
 
         createSorter(section.images);
         
-        function addFilter(subsection, name, options) {
-          var filter;
-          subsection.head.appendChild(document.createTextNode(' '));
-          subsection.head.appendChild(filter = subsection[name] = document.createElement('SELECT'));
-          for (var i = 0; i < options.length; i++) {
-            var option = document.createElement('OPTION');
-            option.value = options[i].value;
-            option.text = options[i].text;
-            if (options[i].selected) option.selected = true;
-            filter.appendChild(option);
-          }
-          filter.onchange = function(e) {
-            var classDiff = this.value.match(/\S+/g);
-            for (var i = 0; i < classDiff.length; i++) {
-              var op = classDiff[i][0], className = classDiff[i].slice(1);
-              if (op === '-') subsection.classList.remove(className);
-              else subsection.classList.add(className);
-            }
-          };
-        }
-        
-        addFilter(section.images, 'animationMode', [
-          {value:'-hide_animated -hide_static', text:'Static & Animated'},
-          {value:'-hide_animated +hide_static', text:'Animated Only'},
-          {value:'+hide_animated -hide_static', text:'Static Only'},
-        ]);
-
-        addFilter(section.images, 'imageMode', [
-          {value:'-hide_sprites -hide_textures', text:'Textures & Sprites'},
-          {value:'-hide_sprites +hide_textures', text:'Sprites Only'},
-          {value:'+hide_sprites -hide_textures', text:'Textures Only'},
-        ]);
-
-        addFilter(section.images, 'matteMode', [
-          {value:'-hide_translucent -hide_matte', text:'Matte & Translucent'},
-          {value:'-hide_translucent +hide_matte', text:'Translucent Only'},
-          {value:'+hide_translucent -hide_matte', text:'Matte Only'},
-        ]);
-
         function addImage(image) {
           var el = document.createElement('DIV');
           el.className = 'gallery-item is-' + image.kind;
+          if (image.kind === 'sprite') el.classList.add('stencil');
           el.dataset.index = image.nameRecord.index;
           el.dataset.shortName = image.nameRecord.shortName;
           el.dataset.longName = image.nameRecord.longName;
@@ -421,6 +383,7 @@ function(GIF, MGL, GDV, DAS) {
           image.retrievedHeader.then(function(header) {
             if (header.isAnimated) el.classList.add('is-animated');
             if (header.flags & 0x400) el.classList.add('is-blended');
+            if (image.kind === 'texture' && !(header.flags & 0x200)) el.classList.add('is-stencil');
             el.image.style.width = header.width + 'px';
             el.image.style.height = header.height + 'px';
             var flags = [];
