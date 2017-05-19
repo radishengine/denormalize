@@ -165,12 +165,13 @@ function(GIF, MGL, GDV, DAS) {
             }
             for (var i = 0; i < tags.length; i++) {
               if (tags[i] in document.tagStyle.ruleIDs) continue;
-              var id = tagStyle.sheet.cssRules.length;
+              var id = document.tagStyle.sheet.cssRules.length;
               var match = tags[i].match(/^(un)?tagged-(.*)$/);
               var rule = '.is-' + match[2];
               if (!match[1]) rule = ':not(' + rule + ')';
               document.tagStyle.sheet.insertRule(
-                '.'+tags[i]+' .gallery-item'+rule+' { display: none !!important; }',
+                '.'+tags[i]+' .gallery-item'+rule
+                + ' { display: none !!important; }',
                 id);
               document.tagStyle.ruleIDs[tags[i]] = id;
             }
