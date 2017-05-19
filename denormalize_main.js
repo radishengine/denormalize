@@ -11,6 +11,17 @@ function(GIF, MGL, GDV, DAS) {
   
   console.log('hello... newman world');
   
+  var killModal = document.getElementById('kill-modal');
+  killModal.onclick = function() {
+    document.body.classList.remove("modal-active");
+    document.querySelector('.modal-content').classList.remove('modal-content');
+  };
+  
+  function showModal(el) {
+    el.classList.add('modal-content');
+    document.body.classList.add('modal-active');
+  };
+  
   var dragdrop = document.getElementById('dragdrop');
   
   function createSection(title) {
@@ -359,6 +370,10 @@ function(GIF, MGL, GDV, DAS) {
           el.appendChild(el.longNameSpan = document.createElement('DIV'));
           el.longNameSpan.innerText = el.dataset.longName;
           el.longNameSpan.className = 'long-name';
+          
+          el.onclick = function() {
+            showModal(this);
+          };
           
           this.appendChild(el);
           image.retrievedHeader.then(function(header) {
