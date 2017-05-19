@@ -60,6 +60,10 @@ define(['require'], function(require) {
     });
   }
   
+  Blob.encode = function(typeName, args, transfer) {
+    return dispatch(typeName, 'encode', args, transfer);
+  };
+  
   Blob.prototype.typeMethod = function(typeName, methodName) {
     var args = [this];
     if (arguments.length > 2) {
