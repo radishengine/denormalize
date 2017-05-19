@@ -4,6 +4,47 @@ define(['require'], function(require) {
   
   const BUFFER_SIZE = 64 * 1024;
   
+  const MAX_WORKERS = (navigator && navigator.hardwareConcurrency) || 2;
+  var workers = [];
+  
+  function dispatch(typeName, methodName, args, transferList) {
+    var worker;
+    if (workers.length < MAX_WORKERS) {
+      worker = new Worker(require.toUrl('blobMethodWorker.js'));
+      worker.activeCount = 1;
+      worker.ids = Object.create(null);
+      workers.push(worker);
+      worker.terminateTimeout = null;
+      worker.addEventListener('message', function(msg) {
+        delete worker.ids[msg.id];
+        if (--worker.activeCount < 1 && worker.terminateTimeout === null) {
+          worker.terminateTimeout = setTimeout(function() {
+            workers.splice(workers.indexOf(worker), 1);
+            worker.terminate();
+          }, 5000);
+        }
+      });
+    }
+    else {
+      worker = workers[0|(Math.random() * workers.length)];
+      worker.activeCount++;
+      if (worker.terminateTimeout !== null) {
+        clearTimeout(worker.terminateTimeout);
+        worker.terminateTimeout = null;
+      }
+    }
+    var id; do { id = Math.random() * 0x7fffffff; } while (id in worker.ids);
+    worker.ids[id] = true;
+    return new Promise(function(resolve, reject) {
+      worker.addEventListener('message', function onmessage(msg) {
+        if (msg.id !== id) return;
+        worker.removeEventListener('message', onmessage);
+        if (msg.success) resolve(msg.result); else reject(msg.result);
+      });
+      worker.postMessage({type:typeName, method:methodName, args:args, id:id}, transferList);
+    });
+  }
+  
   Blob.prototype.typeMethod = function(typeName, methodName) {
     var args = [this];
     if (arguments.length > 2) {
@@ -26,8 +67,16 @@ define(['require'], function(require) {
     });
   };
   
+  Blob.prototype.typeMethodAsync = function(typeName, methodName) {
+    var args = [this];
+    if (arguments.length > 2) {
+      args.push.apply(args, Array.prototype.slice.call(arguments, 2));
+    }
+    return dispatch(typeName, methodName, args, []);
+  };
+  
   Blob.prototype.decode = function(typeName) {
-    return this.typeMethod(typeName, 'decode');
+    return this.typeMethodAsync(typeName, 'decode');
   };
   
   Blob.prototype.read = function(typeName) {
