@@ -166,7 +166,7 @@ function(GIF, MGL, GDV, DAS) {
         };
         section.filter.appendChild(section.filter.edit = document.createElement('INPUT'));
         section.filter.edit.setAttribute('type', 'search');
-        section.filter.edit.setAttribute('placeholder', 'search');
+        section.filter.edit.setAttribute('placeholder', 'text search');
         section.filter.edit.onchange = function(e) {
           if (this.timeout !== null) {
             window.clearTimeout(this.timeout);
