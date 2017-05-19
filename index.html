@@ -196,11 +196,30 @@
         box-shadow: 2px 2px 0 white inset, 4px 4px 5px rgba(0,0,0,0.2) inset;
       }
     }
+    body.modal-active {
+      overflow: hidden;
+    }
+    #modal {
+      display: none;
+      z-index: 100;
+      position: fixed;
+      left: 0;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba();
+    }
+    body.modal-active #modal {
+      display: block;
+    }
   </style>
 </head>
 <body>
   <div id='dragdrop'>
     Drag &amp; Drop Here
+  </div>
+  <div id='modal'>
+    <button id='kill-modal'>X</button>
   </div>
 </body>
 </html>
