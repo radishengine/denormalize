@@ -162,7 +162,7 @@ function(GIF, MGL, GDV, DAS) {
             var tagStyleSheet = document.tagStyleSheet;
             if (!tagStyleSheet) {
               document.head.appendChild(tagStyleSheet = document.tagStyleSheet = document.createElement('STYLE'));
-              tagStyleSheet.tagRules = Object.create(null);
+              tagStyleSheet.tagRuleIDs = Object.create(null);
             }
             for (var i = 0; i < tags.length; i++) {
               if (tags[i] in tagStyleSheet.tagRuleIDs) continue;
