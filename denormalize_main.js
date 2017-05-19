@@ -113,6 +113,34 @@ function(GIF, MGL, GDV, DAS) {
     else if (/\.das$/i.test(file.name)) {
       DAS.read(file).then(function(das) {
         section.appendChild(section.filter = document.createElement('DIV'));
+        section.filter.update = function() {
+          var text = this.edit.value;
+          var parts = text.match(/\S+/g) || [];
+          if (parts.length === 0) {
+            section.classList.remove('searching');
+          }
+          else {
+            var regex = new RegExp(parts.map(function(part) {
+              part = part.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+              if (this.length === 1) return part;
+              return '(?=.*'+part+')';
+            }, parts).join(''), 'i');
+            var allNodes = section.images.children;
+            for (var i = 0; i < allNodes.length; i++) {
+              if (regex.test(allNodes[i].innerText)) {
+                allNodes[i].classList.add('search-result');
+              }
+              else {
+                allNodes[i].classList.remove('search-result');
+              }
+            }
+            section.classList.add('searching');
+          }
+          for (var el = section.filter.firstElement; el; el = el.nextElementSibling) {
+            var text = el.innerText;
+            
+          }
+        };
         section.filter.className = 'filter';
         section.filter.appendChild(section.filter.tagAdder = document.createElement('SELECT'));
         section.filter.tagAdder.appendChild(section.filter.tagAdder.placeholder = document.createElement('OPTION'));
@@ -175,26 +203,7 @@ function(GIF, MGL, GDV, DAS) {
               this.setSelectionRange(selStart, selEnd);
             }
           }
-          var parts = this.value.match(/\S+/g) || [];
-          if (parts.length === 0) {
-            section.classList.remove('searching');
-          }
-          else {
-            var regex = new RegExp(parts.map(function(part) {
-              return '(?=.*' + part.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&') + ')';
-            }).join(''), 'i');
-            console.log(regex);
-            var allNodes = section.images.children;
-            for (var i = 0; i < allNodes.length; i++) {
-              if (regex.test(allNodes[i].innerText)) {
-                allNodes[i].classList.add('search-result');
-              }
-              else {
-                allNodes[i].classList.remove('search-result');
-              }
-            }
-            section.classList.add('searching');
-          }
+          section.filter.update();
         };
         section.filter.edit.timeout = null;
         section.filter.edit.onkeyup = function(e) {
@@ -362,7 +371,7 @@ function(GIF, MGL, GDV, DAS) {
             el.title += '\nUnk: ' + image.unknown.toString(16);
             el.dataset.width = header.width;
             el.dataset.height = header.height;
-            el.dataset.log2h = Math.ceil(Math.log2(header.height));
+            el.dataset.log2h = Math.max(32, Math.ceil(Math.log2(header.height)));
             el.dataset.wxh = header.width * header.height;
             el.style.order = el.dataset.log2h;
           });
