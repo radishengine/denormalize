@@ -127,7 +127,7 @@ function(GIF, MGL, GDV, DAS) {
             }, parts).join(''), 'i');
             var allNodes = section.images.children;
             for (var i = 0; i < allNodes.length; i++) {
-              if (regex.test(allNodes[i].innerText)) {
+              if (regex.test(allNodes[i].dataset.text)) {
                 allNodes[i].classList.add('search-result');
               }
               else {
@@ -338,6 +338,7 @@ function(GIF, MGL, GDV, DAS) {
           el.dataset.index = image.nameRecord.index;
           el.dataset.shortName = image.nameRecord.shortName;
           el.dataset.longName = image.nameRecord.longName;
+          el.dataset.text = image.nameRecord.shortName + '\n' + image.nameRecord.longName;
           el.setAttribute('title', [
             image.kind.slice(0,1).toUpperCase()
             + image.kind.slice(1)
