@@ -239,12 +239,14 @@ function(GIF, MGL, GDV, DAS) {
           this.tagAdder.appendChild(option);
         };
         
+        section.filter.addTag('Sprites', '+tag:sprite');
+        section.filter.addTag('Textures', '-tag:sprite');
         section.filter.addTag('Animated', '+tag:animated');
         section.filter.addTag('Non-Animated', '-tag:animated');
-        section.filter.addTag('Blended', '+tag:translucent');
-        section.filter.addTag('Non-Blended', '-tag:translucent');
-        section.filter.addTag('Solid', '+tag:solid');
-        section.filter.addTag('Non-Solid', '-tag:solid');
+        section.filter.addTag('Blended', '+tag:blended');
+        section.filter.addTag('Non-Blended', '-tag:blended');
+        section.filter.addTag('Stencil Mask', '+tag:stencil');
+        section.filter.addTag('Solid Mask', '-tag:stencil');
         
         section.appendChild(section.images = document.createElement('DIV'));
 
