@@ -86,6 +86,8 @@
           ))
           (call $ensure (get_local $ptr<out>) (get_local $length))
           (call $copy (get_local $ptr<out>) (get_local $ptr<in>) (get_local $length))
+          (set_local $ptr<in>  (i32.add (get_local $ptr<in>)  (get_local $length)))
+          (set_local $ptr<out> (i32.add (get_local $ptr<out>) (get_local $length)))
           br $continue
         end $4:
           ;; length = 3 + (b & 0xF);
@@ -95,10 +97,6 @@
           (set_local $inc (i32.sub
             (get_local $state)
             (i32.load8_u (i32.sub (get_local $ptr<out>) (i32.const 2)))
-          ))
-          (if (i32.eqz (i32.or (get_local $state) (get_local $inc))) (then
-            (set_local $ptr<out> (i32.add (get_local $ptr<out>) (get_local $length)))
-            br $continue
           ))
           loop
             (i32.store8 (get_local $ptr<out>) (tee_local $state (i32.add (get_local $state) (get_local $inc))))
@@ -114,10 +112,6 @@
           (set_local $inc (i32.sub
             (get_local $state)
             (i32.load16_u align=1 (i32.sub (get_local $ptr<out>) (i32.const 4)))
-          ))
-          (if (i32.eqz (i32.or (get_local $state) (get_local $inc))) (then
-            (set_local $ptr<out> (i32.add (get_local $ptr<out>) (get_local $length)))
-            br $continue
           ))
           loop
             (i32.store16 align=1 (get_local $ptr<out>) (tee_local $state (i32.add (get_local $state) (get_local $inc))))
