@@ -161,7 +161,7 @@ define(['wasm/Memory', 'wasm/load!MGL', 'blobMethods'], function(Memory, asm) {
       console.log('slow: ' + (performance.now() - now));
       var out_offset = pages*65536;
       now = performance.now();
-      var buf2_len = asm.decode(0, bytes.length, out_offset) - out_offset;
+      var buf2_len = asm.exports.decode(0, bytes.length, out_offset) - out_offset;
       console.log('fast: ' + (performance.now() - now));
       var buf2 = new Uint8Array(mem.buffer, out_offset, buf2_len);
       console.log('same: ' + same(buf, buf2));
