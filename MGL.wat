@@ -138,7 +138,7 @@
         end $8_B:
           (set_local $offset (i32.add
             (i32.const 3)
-            (i32.and (get_local $b) (i32.const 0xF))
+            (i32.and (get_local $b) (i32.const 0x3F))
           ))
           (set_local $length (i32.const 3))
           (set_local $reps (i32.const 1))
