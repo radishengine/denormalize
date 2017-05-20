@@ -2,7 +2,7 @@ define(function() {
 
   'use strict';
   
-  if ('WebAssembly' in window && typeof WebAssembly.Memory === 'function') {
+  if ('WebAssembly' in self && typeof WebAssembly.Memory === 'function') {
     return WebAssembly.Memory;
   }
   
