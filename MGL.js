@@ -157,7 +157,7 @@ define(['wasm/Memory', 'wasm/load!MGL', 'blobMethods'], function(Memory, asm) {
       bytes.set(values[0]);
       var asm = values[1];
       var now = performance.now();
-      var buf = js_decode(asm);
+      var buf = js_decode(bytes);
       console.log('slow: ' + (performance.now() - now));
       var out_offset = pages*65536;
       now = performance.now();
