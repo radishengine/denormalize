@@ -6,7 +6,10 @@
     (local $addpages i32)
     (set_local $addpages (i32.sub
       (i32.shr_u
-        (i32.add (get_local $ptr<out>) (get_local $sizeof<data>))
+        (i32.add
+          (i32.add (get_local $ptr<out>) (get_local $sizeof<data>))
+          (i32.const 65535)
+        )
         (i32.const 16)
       )
       (current_memory)
