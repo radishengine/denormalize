@@ -32,7 +32,7 @@ onmessage = function(e) {
           postMessage({
             success: false,
             id: id,
-            result: msg,
+            result: msg+'',
           });
         }
       );
