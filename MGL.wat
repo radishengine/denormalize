@@ -20,16 +20,92 @@
   )
   
   (func $copy (param $ptr<out> i32) (param $ptr<in> i32) (param $sizeof<data> i32)
-    block
-      loop
-        (br_if 1 (i32.eqz (get_local $sizeof<data>)))
-        (i32.store8 (get_local $ptr<out>) (i32.load8_u (get_local $ptr<in>)))
-        (set_local $ptr<out>     (i32.add (get_local $ptr<out>)     (i32.const 1)))
-        (set_local $ptr<in>      (i32.add (get_local $ptr<in>)      (i32.const 1)))
-        (set_local $sizeof<data> (i32.sub (get_local $sizeof<data>) (i32.const 1)))
-        br 0
-      end
-    end
+    (local $end<in> i32)
+    (local $end<temp> i32)
+    (set_local $end<in> (i32.add (get_local $ptr<in>) (get_local $sizeof<data>)))
+    block $done
+      (if (i32.and (get_local $ptr<in>) (i32.const 3)) (then
+        loop
+          (br_if $done (i32.ge_u (get_local $ptr<in>) (get_local $end<in>)))
+          
+          (i32.store8 (get_local $ptr<out>) (i32.load8_u (get_local $ptr<in>)))
+          (set_local $ptr<out>     (i32.add (get_local $ptr<out>)     (i32.const 1)))
+          (set_local $ptr<in>      (i32.add (get_local $ptr<in>)      (i32.const 1)))
+          
+          (br_if 0 (i32.and
+            (tee_local $ptr<in> (i32.add (get_local $ptr<in>) (i32.const 1)))
+            (i32.const 3)
+          ))
+        end
+        (set_local $sizeof<data> (i32.sub (get_local $end<in>) (get_local $ptr<in>)))
+      ))
+      
+      block $0..3:
+      block $4..7:
+      block $8..15:
+      block $16..31:
+      block $32...:
+
+        (i32.sub (i32.const 32) (i32.clz (get_local $sizeof<data>)))
+        br_table $0..3: $0..3: $0..3: $4..7: $8..15: $16..31: $32...:
+
+      end $32...:
+        (set_local $end<temp> (i32.and (get_local $end<in>) (i32.const -32)))
+        loop
+          (i32.store align=1 offset=0  (get_local $ptr<out>) (i32.load offset=0  (get_local $ptr<in>)))
+          (i32.store align=1 offset=4  (get_local $ptr<out>) (i32.load offset=4  (get_local $ptr<in>)))
+          (i32.store align=1 offset=8  (get_local $ptr<out>) (i32.load offset=8  (get_local $ptr<in>)))
+          (i32.store align=1 offset=12 (get_local $ptr<out>) (i32.load offset=12 (get_local $ptr<in>)))
+          (i32.store align=1 offset=16 (get_local $ptr<out>) (i32.load offset=16 (get_local $ptr<in>)))
+          (i32.store align=1 offset=20 (get_local $ptr<out>) (i32.load offset=20 (get_local $ptr<in>)))
+          (i32.store align=1 offset=24 (get_local $ptr<out>) (i32.load offset=24 (get_local $ptr<in>)))
+          (i32.store align=1 offset=28 (get_local $ptr<out>) (i32.load offset=28 (get_local $ptr<in>)))
+          (set_local $ptr<out> (i32.add (get_local $ptr<out>) (i32.const 32)))
+          (br_if 0 (i32.lt_u
+            (tee_local $ptr<in> (i32.add (get_local $ptr<in>) (i32.const 32)))
+            (get_local $end<temp>)
+          ))
+        end
+        (set_local $sizeof<data> (i32.sub (get_local $end<in>) (get_local $ptr<in>)))
+        (br_if $0..3: (i32.lt_u (get_local $sizeof<data>) (i32.const 4)))
+        (br_if $4..7: (i32.lt_u (get_local $sizeof<data>) (i32.const 8)))
+        (br_if $8..15: (i32.lt_u (get_local $sizeof<data>) (i32.const 16)))
+        ;; fall through:
+      end $16..31:
+        (i32.store align=1 offset=0  (get_local $ptr<out>) (i32.load offset=0  (get_local $ptr<in>)))
+        (i32.store align=1 offset=4  (get_local $ptr<out>) (i32.load offset=4  (get_local $ptr<in>)))
+        (i32.store align=1 offset=8  (get_local $ptr<out>) (i32.load offset=8  (get_local $ptr<in>)))
+        (i32.store align=1 offset=12 (get_local $ptr<out>) (i32.load offset=12 (get_local $ptr<in>)))
+        (set_local $ptr<out> (i32.add (get_local $ptr<out>) (i32.const 16)))
+        (set_local $ptr<in> (i32.add (get_local $ptr<in>) (i32.const 16)))
+        (set_local $sizeof<data> (i32.sub (get_local $end<in>) (get_local $ptr<in>)))
+        (br_if $0..3: (i32.lt_u (get_local $sizeof<data>) (i32.const 4)))
+        (br_if $4..7: (i32.lt_u (get_local $sizeof<data>) (i32.const 8)))
+        ;; fall through:
+      end $8..15:
+        (i32.store align=1 offset=0  (get_local $ptr<out>) (i32.load offset=0  (get_local $ptr<in>)))
+        (i32.store align=1 offset=4  (get_local $ptr<out>) (i32.load offset=4  (get_local $ptr<in>)))
+        (set_local $ptr<out> (i32.add (get_local $ptr<out>) (i32.const 8)))
+        (set_local $ptr<in> (i32.add (get_local $ptr<in>) (i32.const 8)))
+        (set_local $sizeof<data> (i32.sub (get_local $end<in>) (get_local $ptr<in>)))
+        (br_if $0..3: (i32.lt_u (get_local $sizeof<data>) (i32.const 4)))
+        ;; fall through:
+      end $4..7:
+        (i32.store align=1 offset=0  (get_local $ptr<out>) (i32.load offset=0  (get_local $ptr<in>)))
+        (set_local $ptr<out> (i32.add (get_local $ptr<out>) (i32.const 4)))
+        (set_local $ptr<in> (i32.add (get_local $ptr<in>) (i32.const 4)))
+        ;; fall through:
+      end $0..3:
+        (br_if $done (i32.ge_u (get_local $ptr<in>) (get_local $end<in>)))
+        loop
+          (i32.store8 (get_local $ptr<out>) (i32.load8_u (get_local $ptr<in>)))
+          (set_local $ptr<in> (i32.add (get_local $ptr<in>) (i32.const 1)))
+          (br_if 0 (i32.lt_u
+            (tee_local $ptr<out> (i32.add (get_local $ptr<out>) (i32.const 1)))
+            (get_local $end<out>)
+          ))
+        end
+    end $done
   )
   
   (func (export "decode")
