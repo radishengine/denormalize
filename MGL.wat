@@ -24,6 +24,7 @@
     (local $end<temp> i32)
     (set_local $end<in> (i32.add (get_local $ptr<in>) (get_local $sizeof<in>)))
     block $done
+      (;
       (if (i32.and (get_local $ptr<in>) (i32.const 3)) (then
         loop
           (br_if $done (i32.ge_u (get_local $ptr<in>) (get_local $end<in>)))
@@ -96,6 +97,7 @@
         (set_local $ptr<in> (i32.add (get_local $ptr<in>) (i32.const 4)))
         ;; fall through:
       end $0..3:
+      ;)
         (br_if $done (i32.ge_u (get_local $ptr<in>) (get_local $end<in>)))
         loop
           (i32.store8 (get_local $ptr<out>) (i32.load8_u (get_local $ptr<in>)))
