@@ -52,14 +52,14 @@
       end $32...:
         (set_local $end<temp> (i32.and (get_local $end<in>) (i32.const -32)))
         loop
-          (i32.store align=1 offset=0  (get_local $ptr<out>) (i32.load offset=0  (get_local $ptr<in>)))
-          (i32.store align=1 offset=4  (get_local $ptr<out>) (i32.load offset=4  (get_local $ptr<in>)))
-          (i32.store align=1 offset=8  (get_local $ptr<out>) (i32.load offset=8  (get_local $ptr<in>)))
-          (i32.store align=1 offset=12 (get_local $ptr<out>) (i32.load offset=12 (get_local $ptr<in>)))
-          (i32.store align=1 offset=16 (get_local $ptr<out>) (i32.load offset=16 (get_local $ptr<in>)))
-          (i32.store align=1 offset=20 (get_local $ptr<out>) (i32.load offset=20 (get_local $ptr<in>)))
-          (i32.store align=1 offset=24 (get_local $ptr<out>) (i32.load offset=24 (get_local $ptr<in>)))
-          (i32.store align=1 offset=28 (get_local $ptr<out>) (i32.load offset=28 (get_local $ptr<in>)))
+          (i32.store offset=0  align=1 (get_local $ptr<out>) (i32.load offset=0  (get_local $ptr<in>)))
+          (i32.store offset=4  align=1 (get_local $ptr<out>) (i32.load offset=4  (get_local $ptr<in>)))
+          (i32.store offset=8  align=1 (get_local $ptr<out>) (i32.load offset=8  (get_local $ptr<in>)))
+          (i32.store offset=12 align=1 (get_local $ptr<out>) (i32.load offset=12 (get_local $ptr<in>)))
+          (i32.store offset=16 align=1 (get_local $ptr<out>) (i32.load offset=16 (get_local $ptr<in>)))
+          (i32.store offset=20 align=1 (get_local $ptr<out>) (i32.load offset=20 (get_local $ptr<in>)))
+          (i32.store offset=24 align=1 (get_local $ptr<out>) (i32.load offset=24 (get_local $ptr<in>)))
+          (i32.store offset=28 align=1 (get_local $ptr<out>) (i32.load offset=28 (get_local $ptr<in>)))
           (set_local $ptr<out> (i32.add (get_local $ptr<out>) (i32.const 32)))
           (br_if 0 (i32.lt_u
             (tee_local $ptr<in> (i32.add (get_local $ptr<in>) (i32.const 32)))
@@ -72,10 +72,10 @@
         (br_if $8..15: (i32.lt_u (get_local $sizeof<data>) (i32.const 16)))
         ;; fall through:
       end $16..31:
-        (i32.store align=1 offset=0  (get_local $ptr<out>) (i32.load offset=0  (get_local $ptr<in>)))
-        (i32.store align=1 offset=4  (get_local $ptr<out>) (i32.load offset=4  (get_local $ptr<in>)))
-        (i32.store align=1 offset=8  (get_local $ptr<out>) (i32.load offset=8  (get_local $ptr<in>)))
-        (i32.store align=1 offset=12 (get_local $ptr<out>) (i32.load offset=12 (get_local $ptr<in>)))
+        (i32.store offset=0  align=1 (get_local $ptr<out>) (i32.load offset=0  (get_local $ptr<in>)))
+        (i32.store offset=4  align=1 (get_local $ptr<out>) (i32.load offset=4  (get_local $ptr<in>)))
+        (i32.store offset=8  align=1 (get_local $ptr<out>) (i32.load offset=8  (get_local $ptr<in>)))
+        (i32.store offset=12 align=1 (get_local $ptr<out>) (i32.load offset=12 (get_local $ptr<in>)))
         (set_local $ptr<out> (i32.add (get_local $ptr<out>) (i32.const 16)))
         (set_local $ptr<in> (i32.add (get_local $ptr<in>) (i32.const 16)))
         (set_local $sizeof<data> (i32.sub (get_local $end<in>) (get_local $ptr<in>)))
@@ -83,15 +83,15 @@
         (br_if $4..7: (i32.lt_u (get_local $sizeof<data>) (i32.const 8)))
         ;; fall through:
       end $8..15:
-        (i32.store align=1 offset=0  (get_local $ptr<out>) (i32.load offset=0  (get_local $ptr<in>)))
-        (i32.store align=1 offset=4  (get_local $ptr<out>) (i32.load offset=4  (get_local $ptr<in>)))
+        (i32.store offset=0  align=1 (get_local $ptr<out>) (i32.load offset=0  (get_local $ptr<in>)))
+        (i32.store offset=4  align=1 (get_local $ptr<out>) (i32.load offset=4  (get_local $ptr<in>)))
         (set_local $ptr<out> (i32.add (get_local $ptr<out>) (i32.const 8)))
         (set_local $ptr<in> (i32.add (get_local $ptr<in>) (i32.const 8)))
         (set_local $sizeof<data> (i32.sub (get_local $end<in>) (get_local $ptr<in>)))
         (br_if $0..3: (i32.lt_u (get_local $sizeof<data>) (i32.const 4)))
         ;; fall through:
       end $4..7:
-        (i32.store align=1 offset=0  (get_local $ptr<out>) (i32.load offset=0  (get_local $ptr<in>)))
+        (i32.store offset=0  align=1 (get_local $ptr<out>) (i32.load offset=0  (get_local $ptr<in>)))
         (set_local $ptr<out> (i32.add (get_local $ptr<out>) (i32.const 4)))
         (set_local $ptr<in> (i32.add (get_local $ptr<in>) (i32.const 4)))
         ;; fall through:
