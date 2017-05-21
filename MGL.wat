@@ -5,9 +5,9 @@
   (func $ensure (param $ptr<out> i32) (param $sizeof<data> i32)
     (local $addpages i32)
     (set_local $addpages (i32.sub
-      (i32.div_u
+      (i32.shr_u
         (i32.add (get_local $ptr<out>) (get_local $sizeof<data>))
-        (i32.const 65536)
+        (i32.const 16)
       )
       (current_memory)
     ))
@@ -106,7 +106,10 @@
           br $continue
         end $5:
           ;; length = 2 + (b & 0xF);
-          (set_local $length (i32.shl (i32.add (i32.const 2) (i32.and (get_local $b) (i32.const 0xF))) (i32.const 1)))
+          (set_local $length (i32.shl
+            (i32.add (i32.const 2) (i32.and (get_local $b) (i32.const 0xF)))
+            (i32.const 1)
+          ))
           (call $ensure (get_local $ptr<out>) (get_local $length))
           (set_local $state (i32.load16_u align=1 (i32.sub (get_local $ptr<out>) (i32.const 2))))
           (set_local $inc (i32.sub
@@ -180,13 +183,14 @@
         end $do_reps:
           (call $ensure (get_local $ptr<out>) (i32.mul (get_local $reps) (get_local $length)))
           (if (i32.gt_u (get_local $length) (get_local $offset)) (then
+            (set_local $copy_length (get_local $offset))
             (set_local $offset (i32.sub (get_local $ptr<out>) (get_local $offset)))
-            (set_local $copy_length (i32.sub (get_local $ptr<out>) (get_local $offset)))
             loop
               (set_local $rep_length (get_local $length))
               loop
                 (call $copy (get_local $ptr<out>) (get_local $offset) (get_local $copy_length))
                 (set_local $rep_length (i32.sub (get_local $rep_length) (get_local $copy_length)))
+                (set_local $ptr<out> (i32.add (get_local $ptr<out>) (get_local $copy_length)))
                 (br_if 0 (i32.gt_u (get_local $rep_length) (get_local $copy_length)))
               end
               (if (get_local $rep_length) (then
