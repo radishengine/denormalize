@@ -2,7 +2,7 @@ define(['require'], function(require) {
 
   'use strict';
   
-  const BUFFER_SIZE = 64 * 1024;
+  const BUFFER_SIZE = 256 * 1024;
   
   const MAX_WORKERS = (navigator && navigator.hardwareConcurrency) || 2;
   var workers = [];
