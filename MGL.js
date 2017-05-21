@@ -146,6 +146,8 @@ define(['wasm/Memory', 'wasm/load!MGL', 'blobMethods'], function(Memory, asm) {
     return true;
   }
   
+  const CHECK_SLOW = false;
+  
   MGL.decode = function deMGL(blob) {
     var pages = Math.ceil(blob.size/65536);
     var mem = new Memory({initial:pages*2});
@@ -156,15 +158,19 @@ define(['wasm/Memory', 'wasm/load!MGL', 'blobMethods'], function(Memory, asm) {
       var bytes = new Uint8Array(mem.buffer, 0, values[0].length);
       bytes.set(values[0]);
       var asm = values[1];
-      var now = performance.now();
-      var buf = js_decode(bytes);
-      console.log('slow: ' + (performance.now() - now));
+      var buf;
+      if (CHECK_SLOW) {
+        var now = performance.now();
+        buf = js_decode(bytes);
+        console.log('slow: ' + (performance.now() - now));
+      }
       var out_offset = pages*65536;
-      now = performance.now();
+      var now = performance.now();
       var buf2_len = asm.exports.decode(0, bytes.length, out_offset) - out_offset;
       console.log('fast: ' + (performance.now() - now));
       var buf2 = new Uint8Array(mem.buffer, out_offset, buf2_len);
-      console.log('same: ' + same(buf, buf2));
+      if (CHECK_SLOW) console.log('same: ' + same(buf, buf2));
+      buf = buf2;
       
       var type = '';
       if (String.fromCharCode.apply(null, buf.slice(0, 6)) === 'DASP\x05\x00') {
