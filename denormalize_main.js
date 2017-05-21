@@ -31,9 +31,6 @@ function() {
     div.appendChild(div.closeButton = document.createElement('BUTTON'));
     div.closeButton.classList.add('close_button');
     div.closeButton.innerText = 'X';
-    div.closeButton.onclick = function() {
-      div.parentNode.removeChild(div);
-    };
     div.appendChild(div.titleElement = document.createElement('H3'));
     div.titleElement.innerText = title || '';
     if (dragdrop.nextSibling) {
@@ -47,6 +44,12 @@ function() {
     div.appendChild(inside);
     div.appendChild(inside.buttons = document.createElement('DIV'));
     inside.titleElement = div.titleElement;
+    inside.close = function() {
+      div.parentNode.removeChild(div);
+    };
+    div.closeButton.onclick = function() {
+      inside.close();
+    };
     return inside;
   }
   
@@ -121,6 +124,7 @@ function() {
         if (file2.type === 'application/x-das') {
           file2.name = file.name.replace(/\..*$/, '.DAS');
           onfile(file2);
+          section.close();
         }
         else {
           console.log(file2);
