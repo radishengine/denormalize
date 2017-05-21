@@ -15,7 +15,8 @@
       (current_memory)
     ))
     (if (i32.gt_s (get_local $addpages) (i32.const 0)) (then
-      (drop (grow_memory (get_local $addpages)))
+      (drop (grow_memory (current_memory)))
+      (; (drop (grow_memory (get_local $addpages))) ;)
     ))
   )
   
