@@ -35,7 +35,7 @@ define(['require'], function(require) {
       worker.activeCount++;
       if (worker.terminateTimeout !== null) {
         clearTimeout(worker.terminateTimeout);
-s        worker.terminateTimeout = null;
+        worker.terminateTimeout = null;
       }
     }
     var id; do { id = ((Math.random() * 0x7fffffff)|0).toString(16); } while (id in worker.ids);
