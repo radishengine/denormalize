@@ -7,7 +7,7 @@ define(['require'], function(require) {
   const MAX_WORKERS = (navigator && navigator.hardwareConcurrency) || 2;
   var workers = [];
   
-  function dispatch(typeName, methodName, args, transferList) {
+  function dispatch(typeName, methodName, args, callbacks, transferList) {
     var worker;
     if (workers.length < MAX_WORKERS) {
       worker = new Worker(require.toUrl('blobMethodWorker.js'));
@@ -17,6 +17,7 @@ define(['require'], function(require) {
       worker.terminateTimeout = null;
       worker.addEventListener('message', function(e) {
         var msg = e.data;
+        if ('callback' in msg) return;
         delete worker.ids[msg.id];
         if (--worker.activeCount < 1 && worker.terminateTimeout === null) {
           worker.terminateTimeout = setTimeout(function() {
@@ -34,7 +35,7 @@ define(['require'], function(require) {
       worker.activeCount++;
       if (worker.terminateTimeout !== null) {
         clearTimeout(worker.terminateTimeout);
-        worker.terminateTimeout = null;
+s        worker.terminateTimeout = null;
       }
     }
     var id; do { id = ((Math.random() * 0x7fffffff)|0).toString(16); } while (id in worker.ids);
@@ -44,8 +45,8 @@ define(['require'], function(require) {
         var msg = e.data;
         if (msg.id !== id) return;
         if (typeof msg.callback === 'string') {
-          if (typeof args[0][msg.callback] === 'function') {
-            args[0][msg.callback].apply(args[0], msg.args || []);
+          if (typeof callbacks[msg.callback] === 'function') {
+            callbacks[msg.callback].apply(callbacks, msg.args || []);
           }
           return;
         }
@@ -60,14 +61,19 @@ define(['require'], function(require) {
       }
       worker.addEventListener('message', onmessage);
       worker.addEventListener('error', onerror);
-      worker.postMessage(
-        {type:typeName, method:methodName, args:args, id:id},
+      worker.postMessage({
+          type: typeName,
+          method: methodName,
+          args: args,
+          id: id,
+          callbacks: Object.keys(callbacks || {}),
+        },
         transferList);
     });
   }
   
   Blob.encode = function(typeName, args, transfer) {
-    return dispatch(typeName, 'encode', args, transfer);
+    return dispatch(typeName, 'encode', args, null, transfer);
   };
   
   Blob.prototype.typeMethod = function(typeName, methodName) {
@@ -92,20 +98,20 @@ define(['require'], function(require) {
     });
   };
   
-  Blob.prototype.typeMethodAsync = function(typeName, methodName) {
+  Blob.prototype.typeMethodAsync = function(typeName, methodName, callbacks) {
     var args = [this];
-    if (arguments.length > 2) {
-      args.push.apply(args, Array.prototype.slice.call(arguments, 2));
+    if (arguments.length > 3) {
+      args.push.apply(args, Array.prototype.slice.call(arguments, 3));
     }
-    return dispatch(typeName, methodName, args, []);
+    return dispatch(typeName, methodName, args, callbacks, []);
   };
   
   Blob.prototype.decode = function(typeName) {
-    return this.typeMethodAsync(typeName, 'decode');
+    return this.typeMethodAsync(typeName, 'decode', null);
   };
   
-  Blob.prototype.read = function(typeName) {
-    return this.typeMethod(typeName, 'read');
+  Blob.prototype.read = function(typeName, callbacks) {
+    return this.typeMethodAsync(typeName, 'read', callbacks);
   };
   
   Blob.prototype.readBuffered = function(sliceFrom, sliceTo) {
