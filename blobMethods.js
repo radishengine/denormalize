@@ -43,6 +43,12 @@ define(['require'], function(require) {
       function onmessage(e) {
         var msg = e.data;
         if (msg.id !== id) return;
+        if (typeof msg.callback === 'string') {
+          if (typeof args[0][msg.callback] === 'function') {
+            args[0][msg.callback].apply(args[0], msg.args || []);
+          }
+          return;
+        }
         worker.removeEventListener('message', onmessage);
         worker.removeEventListener('error', onerror);
         if (msg.success) resolve(msg.result); else reject(msg.result);
