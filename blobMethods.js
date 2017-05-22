@@ -110,8 +110,12 @@ s        worker.terminateTimeout = null;
     return this.typeMethodAsync(typeName, 'decode', null);
   };
   
+  Blob.prototype.readRaw = function(typeName, callbacks) {
+    return this.typeMethodAsync(typeName, 'readRaw', callbacks);
+  };
+  
   Blob.prototype.read = function(typeName, callbacks) {
-    return this.typeMethodAsync(typeName, 'read', callbacks);
+    return this.typeMethod(typeName, 'read', callbacks);
   };
   
   Blob.prototype.readBuffered = function(sliceFrom, sliceTo) {
