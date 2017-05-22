@@ -6,6 +6,20 @@ onmessage = function(e) {
       methodName = e.data.method,
       args = e.data.args || [],
       id = e.data.id;
+
+  if (e.data.callbacks) {
+    var callbacks = Object.create(null);
+    (e.data.callbacks || []).forEach(function(callbackName) {
+      callbacks[callbackName] = function() {
+        postMessage({
+          id: id,
+          callback: callbackName,
+          args: Array.prototype.slice.apply(arguments),
+        });
+      };
+    });
+    args.unshift(callbacks);
+  }
   
   require([typeName],
   
