@@ -66,7 +66,7 @@ define(['require'], function(require) {
           method: methodName,
           args: args,
           id: id,
-          callbacks: Object.keys(callbacks || {}),
+          callbacks: callbacks ? Object.keys(callbacks) : null,
         },
         transferList);
     });
