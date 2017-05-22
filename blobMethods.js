@@ -114,8 +114,8 @@ s        worker.terminateTimeout = null;
     return this.typeMethodAsync(typeName, 'readRaw', callbacks);
   };
   
-  Blob.prototype.read = function(typeName, callbacks) {
-    return this.typeMethod(typeName, 'read', callbacks);
+  Blob.prototype.read = function(typeName) {
+    return this.typeMethod(typeName, 'read');
   };
   
   Blob.prototype.readBuffered = function(sliceFrom, sliceTo) {
