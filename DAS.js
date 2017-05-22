@@ -363,9 +363,10 @@ define(['blobMethods'], function() {
       return a.offset - b.offset;
     });
   }
-  DAS.read = function(blob) {
+  DAS.readRaw = function(callbacks, blob) {
     var fileHeader;
     return blob.readBuffered(0, DASFileHeader.byteLength).then(function(headerBytes) {
+      if ('onfileheader' in callbacks) callbacks.onfileheader(headerBytes);
       fileHeader = new DASFileHeader(headerBytes.buffer, headerBytes.byteOffset, headerBytes.byteLength);
       var gotImageRecords = blob.readBuffered(
         fileHeader.imageRecordsOffset,
@@ -380,25 +381,53 @@ define(['blobMethods'], function() {
           uints[i] = dv.getUint32(i*4, true);
         }
         return uints;
+      })
+      .then(function(imageRecords) {
+        if ('onimagerecords' in callbacks) callbacks.onimagerecords(imageRecords);
+        return imageRecords;
       });
       var gotPalette = blob.readBuffered(
         fileHeader.paletteOffset,
-        fileHeader.paletteOffset + 256 * 3).then(readPalette);
+        fileHeader.paletteOffset + 256 * 3).then(readPalette)
+        .then(function(palette) {
+          if ('onpalette' in callbacks) callbacks.onpalette(palette);
+        });
       var gotNamesSection = blob.slice(
         fileHeader.namesOffset,
         fileHeader.namesOffset + fileHeader.namesByteLength)
       .readArrayBuffer().then(function(ab) {
+        if ('onnamessection' in callbacks) callbacks.onnamessection(new Uint8Array(ab));
         return new DASNamesSection(ab, 0, ab.byteLength);
       });
       return Promise.all([gotImageRecords, gotPalette, gotNamesSection]).then(function(values) {
-        var imageRecords = values[0], palette = values[1], namesSection = values[2];
-        return new DAS(
-          blob,
-          fileHeader,
-          imageRecords,
-          palette,
-          namesSection);
+        return true;
       });
+    });
+    
+  };
+  DAS.read = function(blob) {
+    var fileHeader, imageRecords, palette, namesSection;
+    return blob.readRaw('DAS', {
+      onfileheader: function(headerBytes) {
+        fileHeader = new DASFileHeader(headerBytes.buffer, headerBytes.byteOffset, headerBytes.byteLength);
+      },
+      onimagerecords: function(uints) {
+        imageRecords = uints;
+      },
+      onpalette: function(uints) {
+        palette = uints;
+      },
+      onnamessection: function(bytes) {
+        namesSection = new DASNamesSection(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+      },
+    })
+    .then(function() {
+      return new DAS(
+        blob,
+        fileHeader,
+        imageRecords,
+        palette,
+        namesSection);
     });
   };
 
