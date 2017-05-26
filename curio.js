@@ -47,6 +47,12 @@ define(function() {
         
       },
     },
+    addItem: {
+      value: function(item) {
+        this.items.appendChild(item);
+      },
+      enumerable: true,
+    },
   };
   
   curio.create = function(id) {
