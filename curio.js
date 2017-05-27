@@ -4,13 +4,50 @@ define(function() {
   
   var curio = {};
   
-  curio.showAll = function(item) {
+  document.head.appendChild(curio.style = document.createElement('STYLE'));
+  curio.style.tagRules = Object.create(null);
+  
+  curio.getTagClassName = function(tag) {
+    var escaped = tag.replace(/ /g, '_'); // TODO: more robust
+    var tag
+    return 'tag-' + tag; // TODO: escapes
+  };
+  
+  curio.testItem_showAll = function(item) {
     return true;
   };
   
+  curio.getOrderValue_none = function(item) {
+    return NaN;
+  };
+  
+  curio.compareItems_default = function(item1, item2) {
+    return this.getOrderValue(item2) - this.getOrderValue(item1);
+  };
+  
   curio.properties = {
+    orderOnNumericField: {
+      value: function(fieldName, getOrderValue) {
+        this.getOrderValue = getOrderValue || function(item) {
+          return +item.dataset[fieldName];
+        };
+        this.compareItems = curio.compareItems_default;
+      },
+      enumerable: true,
+    },
+    orderOnNonNumericField: {
+      value: function(fieldName, compare) {
+        this.getOrderValue = function(item) {
+          return +item.dataset[fieldName];
+        };
+        this.compareItems = compare || function(item1, item2) {
+          return 
+        };
+      },
+      enumerable: true,
+    },
     _testItem: {
-      value: curio.showAll,
+      value: curio.testItem_showAll,
       writable: true,
       enumerable: false,
     },
