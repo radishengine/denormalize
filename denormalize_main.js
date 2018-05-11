@@ -420,12 +420,7 @@ function() {
               var url = URL.createObjectURL(imageBlob);
               img.setAttribute('src', url);
               el.image.style.background = 'transparent';
-            
-              var imglink = document.createElement('A');
-              imglink.setAttribute('href', url);
-              imglink.setAttribute('download', el.dataset.longName + url.match(/\.[^\.]+$/));
-              imglink.appendChild(img);
-              el.image.appendChild(imglink);
+              el.image.appendChild(img);
             });
           });
         }
